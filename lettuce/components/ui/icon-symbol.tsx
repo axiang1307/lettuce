@@ -18,6 +18,11 @@ const MAPPING = {
   'paperplane.fill': 'send',
   'chevron.left.forwardslash.chevron.right': 'code',
   'chevron.right': 'chevron-right',
+  /** Tab bar — see app/(tabs)/_layout.tsx */
+  'person.3.fill': 'groups',
+  calendar: 'calendar-today',
+  'star.fill': 'star',
+  'person.crop.circle': 'account-circle',
 } as IconMapping;
 
 /**

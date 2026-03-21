@@ -19,15 +19,17 @@ const imgCardImage2 = 'https://www.figma.com/api/mcp/asset/80a5723a-b863-4676-9b
 const imgCardImage3 = 'https://www.figma.com/api/mcp/asset/d8b0be7e-8ed8-4d01-9b17-a098e033ca72';
 const imgCardImage4 = 'https://www.figma.com/api/mcp/asset/ec69c636-25ce-474e-b5fa-4041c93c88b3';
 
+type HomeCard = {
+  imageUrl: string;
+  title: string;
+  details: string[];
+  statusLabel?: string;
+  ctaLabel: string;
+  participants: { avatars: string[]; moreCount?: number };
+};
+
 export function HomePage() {
-  const upcomingCards: Array<{
-    imageUrl: string;
-    title: string;
-    details: string[];
-    statusLabel?: string;
-    ctaLabel: string;
-    participants: { avatars: string[]; moreCount?: number };
-  }> = [
+  const upcomingCards: HomeCard[] = [
     {
       imageUrl: imgCardImage,
       title: "Lana's Birthday Party",
@@ -45,14 +47,7 @@ export function HomePage() {
     },
   ];
 
-  const catchupCards: Array<{
-    imageUrl: string;
-    title: string;
-    details: string[];
-    statusLabel?: string;
-    ctaLabel: string;
-    participants: { avatars: string[]; moreCount?: number };
-  }> = [
+  const catchupCards: HomeCard[] = [
     {
       imageUrl: imgCardImage2,
       title: 'The 3 Goons',

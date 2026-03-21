@@ -25,6 +25,14 @@ In the output, you'll find options to open the app in a
 
 You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
 
+## Lettuce — Phase 1 (static UI)
+
+- **Flow:** `app/index.tsx` → onboarding (`app/onboarding/*`) → login (`app/login.tsx`) → main tabs (`app/(tabs)/*`). No real auth; login accepts any input.
+- **Dev shortcut:** In `app/index.tsx`, set `SKIP_ONBOARDING_AND_LOGIN` to `true` to jump straight to tabs.
+- **Domain types:** `domain/entities.ts` — placeholder shapes for users, groups, events, polls, etc.
+- **Static mock rows:** `data/placeholders.ts` — replace with API/repositories later.
+- **Tabs:** Home (real home UI), Groups, Calendar, Activity, Profile — all use `PlaceholderScreen` except Home.
+
 ## Get a fresh project
 
 When you're ready, run:
