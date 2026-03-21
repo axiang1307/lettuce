@@ -15,10 +15,23 @@ export type EventCardProps = {
     avatars: string[];
     moreCount?: number;
   };
+  /** Opens event detail when user taps the card (image + main content). */
   onPress?: () => void;
+  /** PLACEHOLDER: Remind / Vote / Schedule — wire actions later; does not navigate to detail */
+  onCtaPress?: () => void;
 };
 
-export function EventCard({ variant, imageUrl, title, details, statusLabel, ctaLabel, participants, onPress }: EventCardProps) {
+export function EventCard({
+  variant,
+  imageUrl,
+  title,
+  details,
+  statusLabel,
+  ctaLabel,
+  participants,
+  onPress,
+  onCtaPress,
+}: EventCardProps) {
   return (
     <Pressable
       onPress={onPress}
@@ -56,14 +69,18 @@ export function EventCard({ variant, imageUrl, title, details, statusLabel, ctaL
           </View>
 
           {variant === 'upcoming' && (
-            <Pressable style={({ pressed }) => [styles.ctaButton, styles.ctaUpcoming, pressed && { opacity: 0.95 }]}>
+            <Pressable
+              onPress={onCtaPress ?? (() => undefined)}
+              style={({ pressed }) => [styles.ctaButton, styles.ctaUpcoming, pressed && { opacity: 0.95 }]}>
               <Text style={styles.ctaText}>{ctaLabel}</Text>
             </Pressable>
           )}
         </View>
 
         {variant === 'catchup' && (
-          <Pressable style={({ pressed }) => [styles.ctaButton, styles.ctaCatchup, pressed && { opacity: 0.95 }]}>
+          <Pressable
+            onPress={onCtaPress ?? (() => undefined)}
+            style={({ pressed }) => [styles.ctaButton, styles.ctaCatchup, pressed && { opacity: 0.95 }]}>
             <Text style={styles.ctaText}>{ctaLabel}</Text>
           </Pressable>
         )}

@@ -32,6 +32,7 @@ You can start developing by editing the files inside the **app** directory. This
 - **Domain types:** `domain/entities.ts` — placeholder shapes for users, groups, events, polls, etc.
 - **Static mock rows:** `data/placeholders.ts` — replace with API/repositories later.
 - **Tabs:** Home (real home UI), Groups, Calendar, Activity, Profile — all use `PlaceholderScreen` except Home.
+- **Home:** Tap any event card → `app/event/[eventId].tsx` (static detail from `data/home-feed.ts`). Search bar filters upcoming + catch-up lists by substring.
 
 ## Get a fresh project
 
