@@ -45,7 +45,7 @@ export function EventCard({
         <View style={styles.imageShade} />
 
         {statusLabel && (
-          <View style={styles.statusPill}>
+          <View style={[styles.statusPill, variant === 'catchup' ? styles.statusPillCatchup : styles.statusPillUpcoming]}>
             <Text style={styles.statusText}>{statusLabel}</Text>
           </View>
         )}
@@ -131,14 +131,19 @@ const styles = StyleSheet.create({
   },
   statusPill: {
     position: 'absolute',
-    left: 24,
-    bottom: 64,
-    backgroundColor: 'rgba(255,255,255,0.92)',
+    top: 16,
+    backgroundColor: 'rgba(255,255,255,0.80)',
     height: 36,
     paddingHorizontal: 16,
     borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  statusPillUpcoming: {
+    right: 24,
+  },
+  statusPillCatchup: {
+    left: 16,
   },
   statusText: {
     fontSize: 14,
@@ -163,7 +168,7 @@ const styles = StyleSheet.create({
     lineHeight: 26,
     fontWeight: '600',
     color: '#131313',
-    marginBottom: 8,
+    marginBottom: 2,
   },
   detailsAndCtaRow: {
     flexDirection: 'row',

@@ -7,7 +7,7 @@ import { Colors } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 
 /**
- * PLACEHOLDER: Tab IA matches Figma (Home, Groups, Calendar, Activity, Profile).
+ * Tab bar matches Figma: Home, Groups, Notifications, Profile.
  * Icons are SF Symbols on iOS / mapped Material icons on Android.
  */
 export default function TabLayout() {
@@ -16,9 +16,23 @@ export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
+        tabBarActiveTintColor: '#5e6930',
+        tabBarInactiveTintColor: Colors[colorScheme ?? 'light'].tabIconDefault,
         headerShown: false,
         tabBarButton: HapticTab,
+        tabBarStyle: {
+          backgroundColor: '#ffffff',
+          borderTopWidth: 0,
+          elevation: 0,
+        },
+        tabBarLabelStyle: {
+          fontSize: 10,
+          fontWeight: '700',
+          textTransform: 'uppercase',
+        },
+        tabBarItemStyle: {
+          paddingTop: 2,
+        },
       }}>
       <Tabs.Screen
         name="index"
@@ -35,17 +49,10 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="calendar"
+        name="notifications"
         options={{
-          title: 'Calendar',
-          tabBarIcon: ({ color }) => <IconSymbol size={26} name="calendar" color={color} />,
-        }}
-      />
-      <Tabs.Screen
-        name="activity"
-        options={{
-          title: 'Activity',
-          tabBarIcon: ({ color }) => <IconSymbol size={26} name="star.fill" color={color} />,
+          title: 'Notifications',
+          tabBarIcon: ({ color }) => <IconSymbol size={26} name="bell.fill" color={color} />,
         }}
       />
       <Tabs.Screen
