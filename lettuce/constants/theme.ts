@@ -5,7 +5,8 @@
 
 import { Platform } from 'react-native';
 
-const tintColorLight = '#0a7ea4';
+/** Primary / surface — matches Figma (Lettuce brand green) */
+const tintColorLight = '#9cad50';
 const tintColorDark = '#fff';
 
 export const Colors = {
