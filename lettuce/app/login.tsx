@@ -1,8 +1,11 @@
 import { Href, useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { Colors } from '@/constants/theme';
+import { OnboardingOutlineButton, OnboardingPrimaryButton } from '@/components/onboarding/OnboardingButtons';
+import { LettuceLogo } from '@/components/onboarding/LettuceLogo';
+import { Colors, OnboardingFontFamily } from '@/constants/theme';
 
 /**
  * PLACEHOLDER LOGIN — no validation, no accounts, no network.
@@ -19,91 +22,112 @@ export default function LoginScreen() {
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Log in</Text>
-      <Text style={styles.hint}>
-        [PLACEHOLDER] Fake login — type anything or nothing, then enter the app.
-      </Text>
+    <SafeAreaView style={styles.container}>
+      <View style={styles.logoWrap}>
+        <LettuceLogo />
+      </View>
 
-      <Text style={styles.label}>Email</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="you@example.com"
-        placeholderTextColor="#9ca3af"
-        autoCapitalize="none"
-        keyboardType="email-address"
-        value={email}
-        onChangeText={setEmail}
-      />
+      <View style={styles.contentWrap}>
+        <View style={styles.headerWrap}>
+          <Text style={styles.title}>Log in</Text>
+          <Text style={styles.subtitle}>Welcome back! Enter your details to continue.</Text>
+        </View>
 
-      <Text style={styles.label}>Password</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="••••••••"
-        placeholderTextColor="#9ca3af"
-        secureTextEntry
-        value={password}
-        onChangeText={setPassword}
-      />
+        <View style={styles.formWrap}>
+          <TextInput
+            style={styles.input}
+            placeholder="Email"
+            placeholderTextColor={Colors.light.onboarding.disabledText}
+            autoCapitalize="none"
+            keyboardType="email-address"
+            value={email}
+            onChangeText={setEmail}
+          />
+          <TextInput
+            style={styles.input}
+            placeholder="Password"
+            placeholderTextColor={Colors.light.onboarding.disabledText}
+            secureTextEntry
+            value={password}
+            onChangeText={setPassword}
+          />
+        </View>
 
-      <Pressable style={({ pressed }) => [styles.primary, pressed && styles.pressed]} onPress={goToApp}>
-        <Text style={styles.primaryText}>Enter app</Text>
-      </Pressable>
+        <Pressable onPress={() => undefined}>
+          <Text style={styles.forgot}>Forgot password?</Text>
+        </Pressable>
+      </View>
 
-      {/* PLACEHOLDER: forgot password / sign up links */}
-      <Text style={styles.footerNote}>[PLACEHOLDER] Forgot password & Sign up links go here.</Text>
-    </View>
+      <View style={styles.footerWrap}>
+        <OnboardingOutlineButton label="Back" onPress={() => router.back()} />
+        <OnboardingPrimaryButton label="Enter app" onPress={goToApp} />
+      </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 24,
-    paddingTop: 48,
-    gap: 12,
+    alignItems: 'center',
     backgroundColor: Colors.light.background,
   },
-  title: {
-    fontSize: 28,
-    fontWeight: '700',
-    color: Colors.light.text,
-    marginBottom: 4,
-  },
-  hint: {
-    fontSize: 14,
-    color: '#6b7280',
-    marginBottom: 16,
-  },
-  label: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: Colors.light.text,
+  logoWrap: {
     marginTop: 8,
+    width: '100%',
+  },
+  contentWrap: {
+    marginTop: 64,
+    width: 361,
+  },
+  headerWrap: {
+    alignItems: 'center',
+    gap: 10,
+    marginBottom: 24,
+  },
+  title: {
+    color: Colors.light.onboarding.title,
+    fontFamily: OnboardingFontFamily.heading,
+    fontSize: 28.83,
+    lineHeight: 37.48,
+  },
+  subtitle: {
+    color: '#373737',
+    fontFamily: OnboardingFontFamily.body,
+    fontSize: 18,
+    lineHeight: 27,
+    textAlign: 'center',
+  },
+  formWrap: {
+    gap: 12,
   },
   input: {
-    borderWidth: 1,
-    borderColor: '#e5e7eb',
-    borderRadius: 10,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    fontSize: 16,
-    color: Colors.light.text,
     backgroundColor: '#fff',
+    borderRadius: 8,
+    color: Colors.light.onboarding.title,
+    fontFamily: OnboardingFontFamily.body,
+    fontSize: 14,
+    height: 48,
+    lineHeight: 21,
+    paddingHorizontal: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.15,
+    shadowRadius: 6,
   },
-  primary: {
-    backgroundColor: '#9cad50',
-    paddingVertical: 14,
-    borderRadius: 12,
-    alignItems: 'center',
-    marginTop: 24,
+  forgot: {
+    alignSelf: 'flex-end',
+    color: Colors.light.onboarding.caption,
+    fontFamily: OnboardingFontFamily.bodySemibold,
+    fontSize: 16,
+    lineHeight: 24,
+    marginTop: 12,
+    textDecorationLine: 'underline',
   },
-  pressed: { opacity: 0.92 },
-  primaryText: { color: '#fff', fontSize: 17, fontWeight: '600' },
-  footerNote: {
-    marginTop: 24,
-    fontSize: 13,
-    color: '#9ca3af',
-    textAlign: 'center',
+  footerWrap: {
+    gap: 12,
+    marginBottom: 24,
+    marginTop: 'auto',
+    width: 361,
   },
 });

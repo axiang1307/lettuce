@@ -1,6 +1,10 @@
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
+import { useFonts as useDmSansFonts, DMSans_400Regular, DMSans_600SemiBold } from '@expo-google-fonts/dm-sans';
+import { useFonts as useMontserratFonts, Montserrat_600SemiBold } from '@expo-google-fonts/montserrat';
 import { Stack } from 'expo-router';
+import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
+import { useEffect } from 'react';
 import 'react-native-reanimated';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
@@ -10,8 +14,27 @@ export const unstable_settings = {
   anchor: '(tabs)',
 };
 
+void SplashScreen.preventAutoHideAsync();
+
 export default function RootLayout() {
   const colorScheme = useColorScheme();
+  const [dmSansLoaded] = useDmSansFonts({
+    DMSans_400Regular,
+    DMSans_600SemiBold,
+  });
+  const [montserratLoaded] = useMontserratFonts({
+    Montserrat_600SemiBold,
+  });
+
+  useEffect(() => {
+    if (dmSansLoaded && montserratLoaded) {
+      void SplashScreen.hideAsync();
+    }
+  }, [dmSansLoaded, montserratLoaded]);
+
+  if (!dmSansLoaded || !montserratLoaded) {
+    return null;
+  }
 
   return (
     <SafeAreaProvider>

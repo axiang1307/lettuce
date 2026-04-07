@@ -17,6 +17,15 @@ export const Colors = {
     icon: '#687076',
     tabIconDefault: '#687076',
     tabIconSelected: tintColorLight,
+    onboarding: {
+      title: '#131313',
+      caption: '#9e9e9e',
+      disabledText: '#b6b6b6',
+      disabledSurface: '#cecece',
+      progressTrack: '#f3f3f3',
+      progressFill: '#b6cfe3',
+      inputShadow: 'rgba(0,0,0,0.15)',
+    },
   },
   dark: {
     text: '#ECEDEE',
@@ -52,3 +61,9 @@ export const Fonts = Platform.select({
     mono: "SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace",
   },
 });
+
+export const OnboardingFontFamily = {
+  heading: 'Montserrat_600SemiBold',
+  body: 'DMSans_400Regular',
+  bodySemibold: 'DMSans_600SemiBold',
+} as const;
