@@ -7,7 +7,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { HomeLogo } from '@/components/home/home-logo';
 
 const IMG = {
-  michelle: 'https://www.figma.com/api/mcp/asset/7e970be5-7b20-4022-a826-5282b8c68381',
+  michelle: require('@/assets/images/figma-profile/profile-p2.png'),
 };
 
 function NotificationsSearchBar() {
@@ -35,7 +35,7 @@ function FriendRequestRow() {
     <Pressable style={({ pressed }) => [styles.friendRow, pressed && styles.pressed]}>
       <View style={styles.friendInfo}>
         <View style={styles.friendAvatar}>
-          <Image source={{ uri: IMG.michelle }} style={styles.friendAvatarImage} contentFit="cover" />
+          <Image source={IMG.michelle} style={styles.friendAvatarImage} contentFit="cover" />
         </View>
         <View style={styles.friendText}>
           <Text style={styles.friendName}>Michelle H.</Text>

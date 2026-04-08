@@ -8,10 +8,10 @@ import { LettuceLogo } from '@/components/onboarding/LettuceLogo';
 import { OnboardingProgressBar } from '@/components/onboarding/OnboardingProgressBar';
 import { Colors, OnboardingFontFamily } from '@/constants/theme';
 
-const IMG_CALENDAR_PAGE = 'https://www.figma.com/api/mcp/asset/41f56b96-0886-4d21-9d22-b71dc528959f';
-const IMG_EVENT_PAGE = 'https://www.figma.com/api/mcp/asset/576ddfe7-7fc3-4193-bd66-42b16316257b';
-const IMG_POLL_PAGE = 'https://www.figma.com/api/mcp/asset/8ab1dd10-d307-48b3-9524-9c9444aae236';
-const IMG_HOME_PAGE = 'https://www.figma.com/api/mcp/asset/58335d8d-6006-46b2-b3f3-3f3e09610630';
+const IMG_CALENDAR_PAGE = require('@/assets/images/onboarding/welcome-calendar-page.png');
+const IMG_EVENT_PAGE = require('@/assets/images/onboarding/welcome-event-page.png');
+const IMG_POLL_PAGE = require('@/assets/images/onboarding/welcome-poll-page.png');
+const IMG_HOME_PAGE = require('@/assets/images/onboarding/welcome-home-page.png');
 
 export default function OnboardingWelcomeDone() {
   const router = useRouter();

@@ -1,18 +1,19 @@
 import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Image } from 'expo-image';
+import type { ImageSourcePropType } from 'react-native';
 
 import { ParticipantsProfiles } from './participants-profiles';
 
 export type EventCardProps = {
   variant: 'upcoming' | 'catchup';
-  imageUrl: string;
+  imageUrl: string | ImageSourcePropType;
   title: string;
   details: string[];
   statusLabel?: string;
   ctaLabel: string;
   participants: {
-    avatars: string[];
+    avatars: Array<string | ImageSourcePropType>;
     moreCount?: number;
   };
   /** Opens event detail when user taps the card (image + main content). */
@@ -32,6 +33,8 @@ export function EventCard({
   onPress,
   onCtaPress,
 }: EventCardProps) {
+  const imageSource = typeof imageUrl === 'string' ? { uri: imageUrl } : imageUrl;
+
   return (
     <Pressable
       onPress={onPress}
@@ -41,7 +44,7 @@ export function EventCard({
         pressed && { opacity: 0.96 },
       ]}>
       <View style={[styles.imageWrap, variant === 'upcoming' ? styles.imageUpcoming : styles.imageCatchup]}>
-        <Image source={{ uri: imageUrl }} style={styles.image} contentFit="cover" />
+        <Image source={imageSource} style={styles.image} contentFit="cover" />
         <View style={styles.imageShade} />
 
         {statusLabel && (
@@ -50,7 +53,11 @@ export function EventCard({
           </View>
         )}
 
-        <View style={styles.participantsOverlay}>
+        <View
+          style={[
+            styles.participantsOverlay,
+            variant === 'upcoming' ? styles.participantsOverlayUpcoming : styles.participantsOverlayCatchup,
+          ]}>
           <ParticipantsProfiles avatars={participants.avatars} moreCount={participants.moreCount ?? 0} />
         </View>
       </View>
@@ -152,8 +159,13 @@ const styles = StyleSheet.create({
   },
   participantsOverlay: {
     position: 'absolute',
-    left: 24,
     bottom: 16,
+  },
+  participantsOverlayUpcoming: {
+    right: 24,
+  },
+  participantsOverlayCatchup: {
+    left: 24,
   },
   content: {
     flex: 1,
