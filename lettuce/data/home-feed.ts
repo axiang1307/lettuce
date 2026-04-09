@@ -4,34 +4,85 @@
  */
 
 import type { EventId } from '@/domain/entities';
+import type { ImageSourcePropType } from 'react-native';
 
-const imgProfile2 = 'https://www.figma.com/api/mcp/asset/294a0030-7ae0-4bdd-ad95-c18f46b6134d';
-const imgProfile4 = 'https://www.figma.com/api/mcp/asset/760d2f16-ead7-4e62-8017-273cf0eb4bf1';
-const imgProfile = 'https://www.figma.com/api/mcp/asset/01b3f278-3258-4e2e-8892-7bb473cee84b';
-const imgProfile1 = 'https://www.figma.com/api/mcp/asset/294a0030-7ae0-4bdd-ad95-c18f46b6134d';
-const imgProfile3 = 'https://www.figma.com/api/mcp/asset/c69a1979-3217-43b3-869b-e4009cdb6e01';
-const imgProfile5 = 'https://www.figma.com/api/mcp/asset/b9a95cba-39be-43ce-bad6-86f3cd9c6c11';
+const imgProfile2 = require('@/assets/images/figma-home/home-avatar-3.png');
+const imgProfile4 = require('@/assets/images/figma-home/home-avatar-5.png');
+const imgProfile = require('@/assets/images/figma-home/home-avatar-default.png');
+const imgProfile1 = require('@/assets/images/figma-home/home-avatar-1.png');
+const imgProfile3 = require('@/assets/images/figma-home/home-avatar-2.png');
+const imgProfile5 = require('@/assets/images/figma-home/home-avatar-6.png');
 
-const imgCardImage = 'https://www.figma.com/api/mcp/asset/f938f660-0338-4841-a352-35c99be2b4ff';
-const imgCardImage1 = 'https://www.figma.com/api/mcp/asset/6df2dfd0-9302-4a59-960e-f18d4f797e45';
-const imgCardImage2 = 'https://www.figma.com/api/mcp/asset/80a5723a-b863-4676-9b39-fca1a9167dd5';
-const imgCardImage3 = 'https://www.figma.com/api/mcp/asset/d8b0be7e-8ed8-4d01-9b17-a098e033ca72';
-const imgCardImage4 = 'https://www.figma.com/api/mcp/asset/ec69c636-25ce-474e-b5fa-4041c93c88b3';
+const imgCardImage = require('@/assets/images/figma-home/home-card-1.png');
+const imgCardImage1 = require('@/assets/images/figma-home/home-card-2.png');
+const imgCardImage2 = require('@/assets/images/figma-home/home-card-3.png');
+const imgCardImage3 = require('@/assets/images/figma-home/home-card-4.png');
+const imgCardImage4 = require('@/assets/images/figma-home/home-card-5.png');
+const imgActivity1 = require('@/assets/images/figma-home/home-card-1.png');
+const imgActivity2 = require('@/assets/images/figma-home/home-card-2.png');
+const imgActivity3 = require('@/assets/images/figma-home/home-card-3.png');
+const imgActivity4 = require('@/assets/images/figma-profile/profile-event-1.png');
+const imgActivity5 = require('@/assets/images/figma-profile/profile-event-2.png');
+const imgActivity6 = require('@/assets/images/figma-home/home-card-5.png');
+
+export type EventFlowMode = 'detail' | 'calendar' | 'poll' | 'activity';
+export type CalendarVisualState = 'base' | 'overlay' | 'selected';
+export type PollVisualState = 'pending' | 'results' | 'calendarReady';
+
+export type CalendarOption = {
+  id: string;
+  label: string;
+  timeRange: string;
+};
+
+export type PollOption = {
+  id: string;
+  label: string;
+  votes: number;
+  isWinning?: boolean;
+};
+
+export type ActivityCard = {
+  id: string;
+  title: string;
+  subtitle: string;
+  imageUrl: ImageSourcePropType;
+};
 
 export type HomeFeedEvent = {
   id: EventId;
   section: 'upcoming' | 'catchup';
-  imageUrl: string;
+  imageUrl: ImageSourcePropType;
   title: string;
   details: string[];
   statusLabel?: string;
   ctaLabel: string;
-  participants: { avatars: string[]; moreCount?: number };
+  participants: { avatars: ImageSourcePropType[]; moreCount?: number };
   /** PLACEHOLDER: extra copy on the event detail screen */
   groupName: string;
   description: string;
   /** PLACEHOLDER: bullet points / metadata rows */
   detailBullets: string[];
+  calendar: {
+    monthLabel: string;
+    weekLabel: string;
+    visualState: CalendarVisualState;
+    options: CalendarOption[];
+    selectedOptionId?: string;
+  };
+  poll: {
+    title: string;
+    visualState: PollVisualState;
+    pendingQuestion: string;
+    pendingOptions: PollOption[];
+    completedQuestion: string;
+    completedOptions: PollOption[];
+  };
+  activity: {
+    popular: ActivityCard[];
+    previous: ActivityCard[];
+    saved: ActivityCard[];
+  };
 };
 
 export const HOME_FEED_EVENTS: HomeFeedEvent[] = [
@@ -52,6 +103,45 @@ export const HOME_FEED_EVENTS: HomeFeedEvent[] = [
       'Theme: PARTY!!',
       'PLACEHOLDER: 5 people going',
     ],
+    calendar: {
+      monthLabel: 'December 2025',
+      weekLabel: 'Week of 11/30/25',
+      visualState: 'base',
+      options: [
+        { id: 'c1', label: 'Tuesday, 12/02', timeRange: '10AM-12PM' },
+        { id: 'c2', label: 'Thursday, 12/04', timeRange: '1-3PM' },
+      ],
+    },
+    poll: {
+      title: 'When is Birthday Party Happening?',
+      visualState: 'pending',
+      pendingQuestion: 'When is Birthday Party Happening?',
+      pendingOptions: [
+        { id: 'p1', label: 'Tuesday, 12/02 - 10AM', votes: 0 },
+        { id: 'p2', label: 'Tuesday, 12/02 - 11:30AM', votes: 0 },
+        { id: 'p3', label: 'Thursday, 12/04 - 1PM', votes: 0 },
+      ],
+      completedQuestion: 'Where should we celebrate?',
+      completedOptions: [
+        { id: 'cp1', label: 'Movie Night', votes: 1 },
+        { id: 'cp2', label: 'Texas Roadhouse', votes: 2, isWinning: true },
+        { id: 'cp3', label: 'Fancy Dinner', votes: 0 },
+      ],
+    },
+    activity: {
+      popular: [
+        { id: 'a1', title: 'Bowling', subtitle: 'Revel + Roll', imageUrl: imgActivity1 },
+        { id: 'a2', title: 'The Arb', subtitle: "Nichol's Arb", imageUrl: imgActivity2 },
+      ],
+      previous: [
+        { id: 'a3', title: 'Sharetea Boba', subtitle: 'Sharetea', imageUrl: imgActivity4 },
+        { id: 'a4', title: 'Bowling', subtitle: 'Revel + Roll', imageUrl: imgActivity1 },
+      ],
+      saved: [
+        { id: 'a5', title: 'Afternoon Tea', subtitle: 'Tea Haus', imageUrl: imgActivity5 },
+        { id: 'a6', title: 'Detroit Zoo', subtitle: 'Detroit Zoo', imageUrl: imgActivity6 },
+      ],
+    },
   },
   {
     id: 'evt-2',
@@ -71,6 +161,47 @@ export const HOME_FEED_EVENTS: HomeFeedEvent[] = [
       'Activity: Picnicking',
       'PLACEHOLDER: Active poll — Picnic at the Arb',
     ],
+    calendar: {
+      monthLabel: 'December 2025',
+      weekLabel: 'Week of 11/30/25',
+      visualState: 'overlay',
+      options: [
+        { id: 'c1', label: 'Tuesday, 12/02', timeRange: '10AM-12PM' },
+        { id: 'c2', label: 'Thursday, 12/04', timeRange: '1-3PM' },
+        { id: 'c3', label: 'Tuesday, 12/02', timeRange: '11:30AM-1PM' },
+      ],
+      selectedOptionId: 'c3',
+    },
+    poll: {
+      title: 'When is Picnic Happening?',
+      visualState: 'calendarReady',
+      pendingQuestion: 'When is Picnic Happening?',
+      pendingOptions: [
+        { id: 'p1', label: 'Tuesday, 12/02 - 10AM', votes: 0 },
+        { id: 'p2', label: 'Tuesday, 12/02 - 11:30AM', votes: 0 },
+        { id: 'p3', label: 'Thursday, 12/04 - 1PM', votes: 0 },
+      ],
+      completedQuestion: 'What to do??',
+      completedOptions: [
+        { id: 'cp1', label: 'Movie Night', votes: 1 },
+        { id: 'cp2', label: 'Picnic at the Arb', votes: 2, isWinning: true },
+        { id: 'cp3', label: 'Fancy Dinner', votes: 0 },
+      ],
+    },
+    activity: {
+      popular: [
+        { id: 'a1', title: 'Bowling', subtitle: 'Revel + Roll', imageUrl: imgActivity1 },
+        { id: 'a2', title: 'The Arb', subtitle: "Nichol's Arb", imageUrl: imgActivity2 },
+      ],
+      previous: [
+        { id: 'a3', title: 'Sharetea Boba', subtitle: 'Sharetea', imageUrl: imgActivity4 },
+        { id: 'a4', title: 'Bowling', subtitle: 'Revel + Roll', imageUrl: imgActivity3 },
+      ],
+      saved: [
+        { id: 'a5', title: 'Afternoon Tea', subtitle: 'Tea Haus', imageUrl: imgActivity5 },
+        { id: 'a6', title: 'Detroit Zoo', subtitle: 'Detroit Zoo', imageUrl: imgActivity6 },
+      ],
+    },
   },
   {
     id: 'evt-3',
@@ -85,6 +216,45 @@ export const HOME_FEED_EVENTS: HomeFeedEvent[] = [
     description:
       'Last hangout was a month ago. PLACEHOLDER: tap Schedule Meetup to start a new plan from this thread.',
     detailBullets: ['Last met: Sunday, Nov 1', 'PLACEHOLDER: Sydney, Will, you'],
+    calendar: {
+      monthLabel: 'December 2025',
+      weekLabel: 'Week of 11/30/25',
+      visualState: 'base',
+      options: [
+        { id: 'c1', label: 'Tuesday, 12/02', timeRange: '10AM-12PM' },
+        { id: 'c2', label: 'Thursday, 12/04', timeRange: '1-3PM' },
+      ],
+    },
+    poll: {
+      title: 'When should we meet?',
+      visualState: 'pending',
+      pendingQuestion: 'When should we meet?',
+      pendingOptions: [
+        { id: 'p1', label: 'Tuesday, 12/02 - 10AM', votes: 0 },
+        { id: 'p2', label: 'Tuesday, 12/02 - 11:30AM', votes: 0 },
+        { id: 'p3', label: 'Thursday, 12/04 - 1PM', votes: 0 },
+      ],
+      completedQuestion: 'What to do??',
+      completedOptions: [
+        { id: 'cp1', label: 'Movie Night', votes: 1 },
+        { id: 'cp2', label: 'Picnic at the Arb', votes: 2, isWinning: true },
+        { id: 'cp3', label: 'Fancy Dinner', votes: 0 },
+      ],
+    },
+    activity: {
+      popular: [
+        { id: 'a1', title: 'Bowling', subtitle: 'Revel + Roll', imageUrl: imgActivity1 },
+        { id: 'a2', title: 'The Arb', subtitle: "Nichol's Arb", imageUrl: imgActivity2 },
+      ],
+      previous: [
+        { id: 'a3', title: 'Sharetea Boba', subtitle: 'Sharetea', imageUrl: imgActivity4 },
+        { id: 'a4', title: 'Bowling', subtitle: 'Revel + Roll', imageUrl: imgActivity3 },
+      ],
+      saved: [
+        { id: 'a5', title: 'Afternoon Tea', subtitle: 'Tea Haus', imageUrl: imgActivity5 },
+        { id: 'a6', title: 'Detroit Zoo', subtitle: 'Detroit Zoo', imageUrl: imgActivity6 },
+      ],
+    },
   },
   {
     id: 'evt-4',
@@ -98,6 +268,45 @@ export const HOME_FEED_EVENTS: HomeFeedEvent[] = [
     groupName: 'Duo',
     description: 'Boba run downtown. PLACEHOLDER: suggest a new time from Activity ideas.',
     detailBullets: ['Last met: Friday, Oct 17', 'With: @Angie'],
+    calendar: {
+      monthLabel: 'December 2025',
+      weekLabel: 'Week of 11/30/25',
+      visualState: 'base',
+      options: [
+        { id: 'c1', label: 'Tuesday, 12/02', timeRange: '10AM-12PM' },
+        { id: 'c2', label: 'Thursday, 12/04', timeRange: '1-3PM' },
+      ],
+    },
+    poll: {
+      title: 'When should we meet?',
+      visualState: 'pending',
+      pendingQuestion: 'When should we meet?',
+      pendingOptions: [
+        { id: 'p1', label: 'Tuesday, 12/02 - 10AM', votes: 0 },
+        { id: 'p2', label: 'Tuesday, 12/02 - 11:30AM', votes: 0 },
+        { id: 'p3', label: 'Thursday, 12/04 - 1PM', votes: 0 },
+      ],
+      completedQuestion: 'Where should we go?',
+      completedOptions: [
+        { id: 'cp1', label: 'Movie Night', votes: 1 },
+        { id: 'cp2', label: 'Picnic at the Arb', votes: 2, isWinning: true },
+        { id: 'cp3', label: 'Fancy Dinner', votes: 0 },
+      ],
+    },
+    activity: {
+      popular: [
+        { id: 'a1', title: 'Bowling', subtitle: 'Revel + Roll', imageUrl: imgActivity1 },
+        { id: 'a2', title: 'The Arb', subtitle: "Nichol's Arb", imageUrl: imgActivity2 },
+      ],
+      previous: [
+        { id: 'a3', title: 'Sharetea Boba', subtitle: 'Sharetea', imageUrl: imgActivity4 },
+        { id: 'a4', title: 'Bowling', subtitle: 'Revel + Roll', imageUrl: imgActivity3 },
+      ],
+      saved: [
+        { id: 'a5', title: 'Afternoon Tea', subtitle: 'Tea Haus', imageUrl: imgActivity5 },
+        { id: 'a6', title: 'Detroit Zoo', subtitle: 'Detroit Zoo', imageUrl: imgActivity6 },
+      ],
+    },
   },
   {
     id: 'evt-5',
@@ -111,6 +320,45 @@ export const HOME_FEED_EVENTS: HomeFeedEvent[] = [
     groupName: 'Tea crew',
     description: 'Afternoon tea and catch-up. PLACEHOLDER: recurring series later.',
     detailBullets: ['Last met: Sunday, Oct 5', 'With: @Emily @Jane'],
+    calendar: {
+      monthLabel: 'December 2025',
+      weekLabel: 'Week of 11/30/25',
+      visualState: 'base',
+      options: [
+        { id: 'c1', label: 'Tuesday, 12/02', timeRange: '10AM-12PM' },
+        { id: 'c2', label: 'Thursday, 12/04', timeRange: '1-3PM' },
+      ],
+    },
+    poll: {
+      title: 'When should we meet?',
+      visualState: 'pending',
+      pendingQuestion: 'When should we meet?',
+      pendingOptions: [
+        { id: 'p1', label: 'Tuesday, 12/02 - 10AM', votes: 0 },
+        { id: 'p2', label: 'Tuesday, 12/02 - 11:30AM', votes: 0 },
+        { id: 'p3', label: 'Thursday, 12/04 - 1PM', votes: 0 },
+      ],
+      completedQuestion: 'Where should we go?',
+      completedOptions: [
+        { id: 'cp1', label: 'Movie Night', votes: 1 },
+        { id: 'cp2', label: 'Picnic at the Arb', votes: 2, isWinning: true },
+        { id: 'cp3', label: 'Fancy Dinner', votes: 0 },
+      ],
+    },
+    activity: {
+      popular: [
+        { id: 'a1', title: 'Bowling', subtitle: 'Revel + Roll', imageUrl: imgActivity1 },
+        { id: 'a2', title: 'The Arb', subtitle: "Nichol's Arb", imageUrl: imgActivity2 },
+      ],
+      previous: [
+        { id: 'a3', title: 'Sharetea Boba', subtitle: 'Sharetea', imageUrl: imgActivity4 },
+        { id: 'a4', title: 'Bowling', subtitle: 'Revel + Roll', imageUrl: imgActivity3 },
+      ],
+      saved: [
+        { id: 'a5', title: 'Afternoon Tea', subtitle: 'Tea Haus', imageUrl: imgActivity5 },
+        { id: 'a6', title: 'Detroit Zoo', subtitle: 'Detroit Zoo', imageUrl: imgActivity6 },
+      ],
+    },
   },
 ];
 

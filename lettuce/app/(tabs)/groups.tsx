@@ -1,5 +1,6 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
+import { Href, useRouter } from 'expo-router';
 import React from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -7,36 +8,39 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { HomeLogo } from '@/components/home/home-logo';
 
 const IMG = {
-  scheduled: 'https://www.figma.com/api/mcp/asset/f04c86f9-8174-4cdf-8f74-8aebfe078395',
-  planningOne: 'https://www.figma.com/api/mcp/asset/76bbe910-c16a-4324-9466-8b10a0c4f1f6',
-  planningTwo: 'https://www.figma.com/api/mcp/asset/74d0587f-ac7b-4fe3-aea3-554ef21e7f18',
-  avatarA: 'https://www.figma.com/api/mcp/asset/2569aaa3-cb50-48f9-9099-5f9ce10d4ca0',
-  avatarB: 'https://www.figma.com/api/mcp/asset/7a6c0e14-5c4b-414f-9c55-dda99cc6e8ac',
-  avatarC: 'https://www.figma.com/api/mcp/asset/9ae9a8b5-976a-4e65-a2d3-3574623bfc38',
-  avatarD: 'https://www.figma.com/api/mcp/asset/ddffebc8-8492-4a6f-a52f-e2d5ec9e352e',
-  avatarE: 'https://www.figma.com/api/mcp/asset/bc8135b1-8475-43e0-aa4c-e0573d14538c',
-  avatarF: 'https://www.figma.com/api/mcp/asset/b169d0a6-5643-436d-bd5c-28e50c1689c9',
-  avatarG: 'https://www.figma.com/api/mcp/asset/16a3318b-a6cb-422d-957a-b4977160ca3b',
-  avatarH: 'https://www.figma.com/api/mcp/asset/3d2cd4f5-beb1-48d3-94f9-70702f64b922',
+  scheduled: require('@/assets/images/figma-home/home-card-1.png'),
+  planningOne: require('@/assets/images/figma-home/home-card-2.png'),
+  planningTwo: require('@/assets/images/figma-home/home-card-3.png'),
+  avatarA: require('@/assets/images/figma-home/home-avatar-default.png'),
+  avatarB: require('@/assets/images/figma-home/home-avatar-1.png'),
+  avatarC: require('@/assets/images/figma-home/home-avatar-2.png'),
+  avatarD: require('@/assets/images/figma-home/home-avatar-3.png'),
+  avatarE: require('@/assets/images/figma-home/home-avatar-4.png'),
+  avatarF: require('@/assets/images/figma-home/home-avatar-5.png'),
+  avatarG: require('@/assets/images/figma-home/home-avatar-6.png'),
+  avatarH: require('@/assets/images/figma-profile/profile-p1.png'),
 };
 
 type GroupsCardProps = {
-  imageUrl: string;
+  eventId?: string;
+  imageUrl: any;
   title: string;
   details: [string, string, string];
   cta: string;
   status?: string;
-  avatars: string[];
+  avatars: any[];
   plusCount?: number;
+  onPress?: () => void;
+  onCtaPress?: () => void;
 };
 
-function AvatarStack({ avatars, plusCount = 0 }: { avatars: string[]; plusCount?: number }) {
+function AvatarStack({ avatars, plusCount = 0 }: { avatars: any[]; plusCount?: number }) {
   return (
     <View style={styles.avatarsWrap}>
       <View style={styles.avatars}>
-        {avatars.map((uri, idx) => (
-          <View key={`${uri}-${idx}`} style={[styles.avatar, idx > 0 && styles.avatarOverlap]}>
-            <Image source={{ uri }} style={styles.avatarImage} contentFit="cover" />
+        {avatars.map((source, idx) => (
+          <View key={`${idx}`} style={[styles.avatar, idx > 0 && styles.avatarOverlap]}>
+            <Image source={source} style={styles.avatarImage} contentFit="cover" />
           </View>
         ))}
       </View>
@@ -50,11 +54,11 @@ function AvatarStack({ avatars, plusCount = 0 }: { avatars: string[]; plusCount?
   );
 }
 
-function GroupsCard({ imageUrl, title, details, cta, status, avatars, plusCount = 0 }: GroupsCardProps) {
+function GroupsCard({ imageUrl, title, details, cta, status, avatars, plusCount = 0, onPress, onCtaPress }: GroupsCardProps) {
   return (
-    <Pressable style={({ pressed }) => [styles.card, pressed && styles.pressed]}>
+    <Pressable onPress={onPress} style={({ pressed }) => [styles.card, pressed && styles.pressed]}>
       <View style={styles.cardImageWrap}>
-        <Image source={{ uri: imageUrl }} style={styles.cardImage} contentFit="cover" />
+        <Image source={imageUrl} style={styles.cardImage} contentFit="cover" />
         <View style={styles.imageShade} />
         {status ? (
           <View style={styles.statusPill}>
@@ -75,7 +79,7 @@ function GroupsCard({ imageUrl, title, details, cta, status, avatars, plusCount 
             <Text style={styles.cardDetailText}>{details[1]}</Text>
             <Text style={styles.cardDetailText}>{details[2]}</Text>
           </View>
-          <Pressable style={({ pressed }) => [styles.cta, pressed && styles.pressed]}>
+          <Pressable onPress={onCtaPress} style={({ pressed }) => [styles.cta, pressed && styles.pressed]}>
             <Text style={styles.ctaText}>{cta}</Text>
           </Pressable>
         </View>
@@ -101,7 +105,14 @@ function GroupsSearchBar() {
 }
 
 export default function GroupsTab() {
+  const router = useRouter();
   const insets = useSafeAreaInsets();
+  const openEvent = (eventId: string, mode?: 'detail' | 'calendar' | 'poll' | 'activity') => {
+    router.push({
+      pathname: '/event/[eventId]',
+      params: { eventId, ...(mode ? { mode } : {}) },
+    } as Href);
+  };
 
   return (
     <ScrollView
@@ -126,12 +137,15 @@ export default function GroupsTab() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Scheduled</Text>
           <GroupsCard
+            eventId="evt-1"
             imageUrl={IMG.scheduled}
             title="Lana's Birthday Party"
             details={['Texas Roadhouse', 'Sunday, 12/07 - 1pm', 'PARTY!!']}
             cta="Remind"
             avatars={[IMG.avatarA, IMG.avatarB, IMG.avatarC, IMG.avatarD]}
             plusCount={2}
+            onPress={() => openEvent('evt-1')}
+            onCtaPress={() => openEvent('evt-1', 'calendar')}
           />
         </View>
 
@@ -139,20 +153,26 @@ export default function GroupsTab() {
           <Text style={styles.sectionTitle}>Planning</Text>
           <View style={styles.planningList}>
             <GroupsCard
+              eventId="evt-2"
               imageUrl={IMG.planningOne}
               title="Picnic at the Arb"
               details={['Nichols Arboretum', 'TBD', 'Picnicking']}
               cta="Vote"
               status="Planning"
               avatars={[IMG.avatarA, IMG.avatarE, IMG.avatarF]}
+              onPress={() => openEvent('evt-2')}
+              onCtaPress={() => openEvent('evt-2', 'poll')}
             />
             <GroupsCard
+              eventId="evt-3"
               imageUrl={IMG.planningTwo}
               title="The Powerpuff Girls"
               details={['TBD', 'Saturday, 12/22', 'TBD']}
               cta="Vote"
               status="Planning"
               avatars={[IMG.avatarA, IMG.avatarG, IMG.avatarH]}
+              onPress={() => openEvent('evt-3')}
+              onCtaPress={() => openEvent('evt-3', 'poll')}
             />
           </View>
         </View>

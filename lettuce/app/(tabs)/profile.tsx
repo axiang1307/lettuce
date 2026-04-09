@@ -1,5 +1,6 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
+import { Href, useRouter } from 'expo-router';
 import React from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -7,13 +8,13 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { HomeLogo } from '@/components/home/home-logo';
 
 const IMG = {
-  me: 'https://www.figma.com/api/mcp/asset/bd88ac5c-0dcc-4314-b97f-74002fc365f4',
-  headerBg: 'https://www.figma.com/api/mcp/asset/7d6b1c71-f7cb-438b-ae05-06fc260f217a',
-  eventOne: 'https://www.figma.com/api/mcp/asset/72c00e93-951b-4a72-a50c-7616b789cca0',
-  eventTwo: 'https://www.figma.com/api/mcp/asset/22369f91-7788-4243-8c9d-793465dae166',
-  p1: 'https://www.figma.com/api/mcp/asset/cd8a4163-10b2-42ae-b266-4c27e3f96ff7',
-  p2: 'https://www.figma.com/api/mcp/asset/ac7def82-07e3-4076-94d5-c5fefa970603',
-  p3: 'https://www.figma.com/api/mcp/asset/a592467f-335e-47bc-a708-898fbedfc864',
+  me: require('@/assets/images/figma-profile/profile-avatar-default.png'),
+  headerBg: require('@/assets/images/figma-profile/profile-header-bg.png'),
+  eventOne: require('@/assets/images/figma-profile/profile-event-1.png'),
+  eventTwo: require('@/assets/images/figma-profile/profile-event-2.png'),
+  p1: require('@/assets/images/figma-profile/profile-p1.png'),
+  p2: require('@/assets/images/figma-profile/profile-p2.png'),
+  p3: require('@/assets/images/figma-profile/profile-p3.png'),
 };
 
 function Stat({ value, label }: { value: string; label: string }) {
@@ -55,26 +56,28 @@ function PreviousEventCard({
   lineOne,
   lineTwo,
   avatars,
+  onPress,
 }: {
-  imageUrl: string;
+  imageUrl: any;
   status: string;
   title: string;
   lineOne: string;
   lineTwo: string;
-  avatars: string[];
+  avatars: any[];
+  onPress?: () => void;
 }) {
   return (
-    <Pressable style={({ pressed }) => [styles.prevCard, pressed && styles.pressed]}>
+    <Pressable onPress={onPress} style={({ pressed }) => [styles.prevCard, pressed && styles.pressed]}>
       <View style={styles.prevImageWrap}>
-        <Image source={{ uri: imageUrl }} style={styles.prevImage} contentFit="cover" />
+        <Image source={imageUrl} style={styles.prevImage} contentFit="cover" />
         <View style={styles.prevImageShade} />
         <View style={styles.statusPill}>
           <Text style={styles.statusText}>{status}</Text>
         </View>
         <View style={styles.avatarRow}>
-          {avatars.map((uri, idx) => (
-            <View key={`${uri}-${idx}`} style={[styles.avatar, idx > 0 && styles.avatarOverlap]}>
-              <Image source={{ uri }} style={styles.avatarImage} contentFit="cover" />
+          {avatars.map((source, idx) => (
+            <View key={`${idx}`} style={[styles.avatar, idx > 0 && styles.avatarOverlap]}>
+              <Image source={source} style={styles.avatarImage} contentFit="cover" />
             </View>
           ))}
         </View>
@@ -93,11 +96,18 @@ function PreviousEventCard({
 }
 
 export default function ProfileTab() {
+  const router = useRouter();
   const insets = useSafeAreaInsets();
+  const openEvent = (eventId: string, mode?: 'detail' | 'calendar' | 'poll' | 'activity') => {
+    router.push({
+      pathname: '/event/[eventId]',
+      params: { eventId, ...(mode ? { mode } : {}) },
+    } as Href);
+  };
 
   return (
     <View style={styles.screen}>
-      <Image source={{ uri: IMG.headerBg }} style={styles.headerBg} contentFit="cover" />
+      <Image source={IMG.headerBg} style={styles.headerBg} contentFit="cover" />
 
       <ScrollView
         style={styles.scroll}
@@ -109,7 +119,7 @@ export default function ProfileTab() {
 
         <View style={styles.profileHeader}>
           <View style={styles.profileAvatarWrap}>
-            <Image source={{ uri: IMG.me }} style={styles.profileAvatar} contentFit="cover" />
+            <Image source={IMG.me} style={styles.profileAvatar} contentFit="cover" />
           </View>
           <Text style={styles.name}>Joy Huang</Text>
           <Text style={styles.handle}>@joyash</Text>
@@ -138,8 +148,12 @@ export default function ProfileTab() {
             </View>
 
             <View style={styles.calendarList}>
-              <CalendarItem title="Sunday Brunch" place="Tous Les Jours" time="8AM" />
-              <CalendarItem title="3B Girls" place="Dinner @ Fritas" time="6PM" />
+              <Pressable onPress={() => openEvent('evt-1', 'calendar')} style={({ pressed }) => [pressed && styles.pressed]}>
+                <CalendarItem title="Sunday Brunch" place="Tous Les Jours" time="8AM" />
+              </Pressable>
+              <Pressable onPress={() => openEvent('evt-2', 'calendar')} style={({ pressed }) => [pressed && styles.pressed]}>
+                <CalendarItem title="3B Girls" place="Dinner @ Fritas" time="6PM" />
+              </Pressable>
             </View>
           </View>
         </View>
@@ -158,6 +172,7 @@ export default function ProfileTab() {
               lineOne="Sunday, 11/01"
               lineTwo="With @Chris @Luke"
               avatars={[IMG.me, IMG.p1, IMG.p2]}
+              onPress={() => openEvent('evt-3')}
             />
             <PreviousEventCard
               imageUrl={IMG.eventTwo}
@@ -166,6 +181,7 @@ export default function ProfileTab() {
               lineOne="Friday, 10/17"
               lineTwo="With @Angie"
               avatars={[IMG.me, IMG.p3]}
+              onPress={() => openEvent('evt-4')}
             />
           </ScrollView>
         </View>
