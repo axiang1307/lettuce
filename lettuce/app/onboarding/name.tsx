@@ -20,7 +20,7 @@ export default function OnboardingName() {
         <LettuceLogo />
       </View>
       <View style={styles.progressWrap}>
-        <OnboardingProgressBar currentStep={2} totalSteps={4} darkLabel />
+        <OnboardingProgressBar currentStep={3} totalSteps={5} darkLabel />
       </View>
       <Text style={styles.title}>What&apos;s your name?</Text>
 

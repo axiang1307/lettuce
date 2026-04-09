@@ -6,6 +6,7 @@ export default function OnboardingLayout() {
       <Stack.Screen name="index" />
       <Stack.Screen name="phone" />
       <Stack.Screen name="verify" />
+      <Stack.Screen name="credentials" />
       <Stack.Screen name="name" />
       <Stack.Screen name="calendar-sync" />
       <Stack.Screen name="use-cases" />

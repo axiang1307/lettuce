@@ -41,7 +41,7 @@ export default function OnboardingPhone() {
           </View>
 
           <View style={styles.progressWrap}>
-            <OnboardingProgressBar currentStep={1} totalSteps={4} />
+            <OnboardingProgressBar currentStep={1} totalSteps={5} />
           </View>
 
           <Text style={styles.title}>What&apos;s your number?</Text>

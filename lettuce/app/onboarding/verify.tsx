@@ -63,7 +63,7 @@ export default function OnboardingVerify() {
             <LettuceLogo />
           </View>
           <View style={styles.progressWrap}>
-            <OnboardingProgressBar currentStep={1} totalSteps={4} darkLabel />
+            <OnboardingProgressBar currentStep={1} totalSteps={5} darkLabel />
           </View>
           <Text style={styles.title}>What&apos;s the code?</Text>
           <Text style={styles.subtitle}>We sent a code to {displayPhone}</Text>
@@ -93,7 +93,7 @@ export default function OnboardingVerify() {
             <OnboardingPrimaryButton
               label="Continue"
               disabled={code.length !== 6}
-              onPress={() => router.push('/onboarding/name' as Href)}
+              onPress={() => router.push('/onboarding/credentials' as Href)}
             />
           </View>
         </ScrollView>
