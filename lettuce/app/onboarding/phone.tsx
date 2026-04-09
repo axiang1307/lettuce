@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { OnboardingPrimaryButton } from '@/components/onboarding/OnboardingButtons';
+import { OnboardingOutlineButton, OnboardingPrimaryButton } from '@/components/onboarding/OnboardingButtons';
 import { LettuceLogo } from '@/components/onboarding/LettuceLogo';
 import { OnboardingProgressBar } from '@/components/onboarding/OnboardingProgressBar';
 import { PhoneInputRow } from '@/components/onboarding/PhoneInputRow';
@@ -53,22 +53,24 @@ export default function OnboardingPhone() {
             </Text>
           </View>
 
-          <View style={styles.buttonWrap}>
-            <OnboardingPrimaryButton
-              label="Continue"
-              disabled={!isValid}
-              onPress={() =>
-                router.push(
-                  {
-                    pathname: '/onboarding/verify',
-                    params: { phone: phoneDigits },
-                  } as Href
-                )
-              }
-            />
-          </View>
         </ScrollView>
       </KeyboardAvoidingView>
+
+      <View style={styles.footerWrap}>
+        <OnboardingOutlineButton label="Back" onPress={() => router.back()} />
+        <OnboardingPrimaryButton
+          label="Continue"
+          disabled={!isValid}
+          onPress={() =>
+            router.push(
+              {
+                pathname: '/onboarding/verify',
+                params: { phone: phoneDigits },
+              } as Href
+            )
+          }
+        />
+      </View>
     </SafeAreaView>
   );
 }
@@ -76,6 +78,7 @@ export default function OnboardingPhone() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    alignItems: 'center',
     backgroundColor: Colors.light.background,
   },
   keyboardContainer: {
@@ -115,9 +118,9 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     width: 292,
   },
-  buttonWrap: {
-    marginTop: 'auto',
-    marginBottom: 36,
-    width: 300,
+  footerWrap: {
+    gap: 12,
+    marginBottom: 24,
+    width: 361,
   },
 });
