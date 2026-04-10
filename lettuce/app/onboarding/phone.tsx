@@ -1,5 +1,6 @@
 import { Href, useRouter } from 'expo-router';
 import React, { useState } from 'react';
+import { supabase } from '@/lib/supabase';
 import {
   Keyboard,
   KeyboardAvoidingView,
@@ -8,6 +9,7 @@ import {
   StyleSheet,
   Text,
   View,
+  Alert
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -61,14 +63,19 @@ export default function OnboardingPhone() {
         <OnboardingPrimaryButton
           label="Continue"
           disabled={!isValid}
-          onPress={() =>
+          onPress={async () => {
+            const {error} = await supabase.auth.signInWithOtp({ phone: '+1' + phoneDigits })
+            if (error) {
+              Alert.alert('Error', error.message);
+              return;
+            }
             router.push(
               {
                 pathname: '/onboarding/verify',
                 params: { phone: phoneDigits },
               } as Href
             )
-          }
+          }}
         />
       </View>
     </SafeAreaView>

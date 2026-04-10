@@ -1,5 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Href, useRouter } from 'expo-router';
+import { supabase } from '@/lib/supabase';
 import React, { useMemo, useState } from 'react';
 import {
   Keyboard,
@@ -11,6 +12,7 @@ import {
   Text,
   TextInput,
   View,
+  Alert
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -139,7 +141,17 @@ export default function OnboardingCredentials() {
         <OnboardingPrimaryButton
           label="Continue"
           disabled={!isValid}
-          onPress={() => router.push('/onboarding/name' as Href)}
+          onPress={async () => {
+            await supabase.auth.signOut();
+            const {error} = await supabase.auth.signUp({
+              email: email,
+              password: password,
+            });
+            if (error) {
+              Alert.alert('Error', error.message);
+              return;
+            }
+            router.push('/onboarding/name' as Href)}}
         />
       </View>
     </SafeAreaView>

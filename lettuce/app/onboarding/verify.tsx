@@ -1,5 +1,6 @@
 import { Href, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { supabase } from '@/lib/supabase';
 import {
   Keyboard,
   KeyboardAvoidingView,
@@ -10,10 +11,11 @@ import {
   Text,
   TextInput,
   View,
+  Alert
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { OnboardingPrimaryButton } from '@/components/onboarding/OnboardingButtons';
+import { OnboardingOutlineButton, OnboardingPrimaryButton } from '@/components/onboarding/OnboardingButtons';
 import { LettuceLogo } from '@/components/onboarding/LettuceLogo';
 import { OnboardingProgressBar } from '@/components/onboarding/OnboardingProgressBar';
 import { Colors, OnboardingFontFamily } from '@/constants/theme';
@@ -87,17 +89,49 @@ export default function OnboardingVerify() {
             importantForAutofill="yes"
           />
 
-          <Text style={styles.caption}>Didn&apos;t get it? Resend in 0:{String(seconds).padStart(2, '0')}</Text>
-
-          <View style={styles.buttonWrap}>
-            <OnboardingPrimaryButton
-              label="Continue"
-              disabled={code.length !== 6}
-              onPress={() => router.push('/onboarding/credentials' as Href)}
-            />
-          </View>
+          <Pressable
+            disabled={seconds > 0}
+            onPress = {async () => {
+            const {error} = await supabase.auth.resend({
+              phone: '+1' + phone,
+              type: 'sms',
+            });
+            if (error) {
+              Alert.alert('Error', error.message);
+              return;
+            }
+            setSeconds(44);
+          }
+          }>
+            {/* upon resend becomes green and udnerlined */}
+            <Text style={[styles.caption, seconds === 0 && styles.resendActive]}>
+              {seconds > 0
+                ? `Didn't get it? Resend in 0:${String(seconds).padStart(2, '0')}`
+                : "Didn't get it? Resend"}
+            </Text>
+          </Pressable>
         </ScrollView>
       </KeyboardAvoidingView>
+
+      <View style={styles.footerWrap}>
+        <OnboardingOutlineButton label="Back" onPress={() => router.back()} />
+        <OnboardingPrimaryButton
+          label="Continue"
+          disabled={code.length !== 6}
+          onPress={async () => {
+            const { error } = await supabase.auth.verifyOtp({
+              phone: '+1' + phone,
+              token: code,
+              type: 'sms',
+            });
+            if (error) {
+              Alert.alert('Error', error.message);//maybe check on this alert message later bc not good
+              return;
+            }
+            router.push('/onboarding/credentials' as Href);
+          }}
+        />
+      </View>
     </SafeAreaView>
   );
 }
@@ -105,6 +139,7 @@ export default function OnboardingVerify() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    alignItems: 'center',
     backgroundColor: Colors.light.background,
   },
   keyboardContainer: {
@@ -176,9 +211,13 @@ const styles = StyleSheet.create({
     marginTop: 20,
     textAlign: 'center',
   },
-  buttonWrap: {
-    marginTop: 'auto',
-    marginBottom: 36,
-    width: 300,
+  resendActive: {
+    color: Colors.light.tint,
+    textDecorationLine: 'underline',
+  },
+  footerWrap: {
+    gap: 12,
+    marginBottom: 24,
+    width: 361,
   },
 });

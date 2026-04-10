@@ -1,6 +1,6 @@
 import { Href, useRouter } from 'expo-router';
 import React, { useMemo, useState } from 'react';
-import { StyleSheet, Text, TextInput, View } from 'react-native';
+import { Keyboard, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { OnboardingPrimaryButton } from '@/components/onboarding/OnboardingButtons';
@@ -16,34 +16,48 @@ export default function OnboardingName() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.logoWrap}>
-        <LettuceLogo />
-      </View>
-      <View style={styles.progressWrap}>
-        <OnboardingProgressBar currentStep={3} totalSteps={5} darkLabel />
-      </View>
-      <Text style={styles.title}>What&apos;s your name?</Text>
+      <KeyboardAvoidingView
+        behavior={Platform.select({ ios: 'padding', default: undefined })}
+        style={styles.keyboardContainer}>
+        <ScrollView
+          alwaysBounceVertical
+          bounces
+          contentContainerStyle={styles.scrollContent}
+          keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'on-drag'}
+          keyboardShouldPersistTaps="handled"
+          onScrollBeginDrag={Keyboard.dismiss}
+          scrollEventThrottle={16}
+          showsVerticalScrollIndicator={false}>
+          <View style={styles.logoWrap}>
+            <LettuceLogo />
+          </View>
+          <View style={styles.progressWrap}>
+            <OnboardingProgressBar currentStep={3} totalSteps={5} darkLabel />
+          </View>
+          <Text style={styles.title}>What&apos;s your name?</Text>
 
-      <View style={styles.formWrap}>
-        <TextInput
-          value={firstName}
-          onChangeText={setFirstName}
-          placeholder="First name"
-          placeholderTextColor={Colors.light.onboarding.disabledText}
-          style={styles.input}
-        />
-        <TextInput
-          value={lastName}
-          onChangeText={setLastName}
-          placeholder="Last name"
-          placeholderTextColor={Colors.light.onboarding.disabledText}
-          style={styles.input}
-        />
-      </View>
+          <View style={styles.formWrap}>
+            <TextInput
+              value={firstName}
+              onChangeText={setFirstName}
+              placeholder="First name"
+              placeholderTextColor={Colors.light.onboarding.disabledText}
+              style={styles.input}
+            />
+            <TextInput
+              value={lastName}
+              onChangeText={setLastName}
+              placeholder="Last name"
+              placeholderTextColor={Colors.light.onboarding.disabledText}
+              style={styles.input}
+            />
+          </View>
 
-      <Text style={styles.caption}>
-        We show your first name and the initial of your last name to your friends on Lettuce.
-      </Text>
+          <Text style={styles.caption}>
+            We show your first name and the initial of your last name to your friends on Lettuce.
+          </Text>
+        </ScrollView>
+      </KeyboardAvoidingView>
 
       <View style={styles.buttonWrap}>
         <OnboardingPrimaryButton
@@ -68,6 +82,13 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     backgroundColor: Colors.light.background,
+  },
+  keyboardContainer: {
+    flex: 1,
+  },
+  scrollContent: {
+    alignItems: 'center',
+    flexGrow: 1,
   },
   logoWrap: {
     marginTop: 20,
