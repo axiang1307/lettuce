@@ -125,7 +125,7 @@ export default function OnboardingVerify() {
               type: 'sms',
             });
             if (error) {
-              Alert.alert('Error', error.message);//maybe check on this alert message later bc not good
+              Alert.alert('Error', error.message);
               return;
             }
             router.push('/onboarding/credentials' as Href);

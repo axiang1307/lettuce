@@ -9,10 +9,7 @@ import { LettuceLogo } from '@/components/onboarding/LettuceLogo';
 import { OnboardingOutlineButton, OnboardingPrimaryButton } from '@/components/onboarding/OnboardingButtons';
 import { Colors, OnboardingFontFamily } from '@/constants/theme';
 
-/**
- * PLACEHOLDER LOGIN — no validation, no accounts, no network.
- * Any non-empty tap on "Enter app" proceeds; empty fields are allowed too for quick testing.
- */
+
 export default function LoginScreen() {
   const router = useRouter();
   const [email, setEmail] = useState('');
