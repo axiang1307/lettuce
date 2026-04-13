@@ -37,7 +37,7 @@ export default function OnboardingCalendarSync() {
         <LettuceLogo />
       </View>
       <View style={styles.progressWrap}>
-        <OnboardingProgressBar currentStep={3} totalSteps={4} />
+        <OnboardingProgressBar currentStep={4} totalSteps={5} />
       </View>
 
       <View style={styles.contentWrap}>

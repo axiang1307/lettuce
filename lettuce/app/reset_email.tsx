@@ -2,27 +2,28 @@ import { Href, useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import {
+  Alert,
   Keyboard,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
   StyleSheet,
   Text,
+  TextInput,
   View,
-  Alert
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { OnboardingOutlineButton, OnboardingPrimaryButton } from '@/components/onboarding/OnboardingButtons';
 import { LettuceLogo } from '@/components/onboarding/LettuceLogo';
-import { OnboardingProgressBar } from '@/components/onboarding/OnboardingProgressBar';
-import { PhoneInputRow } from '@/components/onboarding/PhoneInputRow';
 import { Colors, OnboardingFontFamily } from '@/constants/theme';
 
-export default function OnboardingPhone() {
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+export default function ResetEmail() {
   const router = useRouter();
-  const [phoneDigits, setPhoneDigits] = useState('');
-  const isValid = phoneDigits.length === 10;
+  const [email, setEmail] = useState('');
+  const isValid = EMAIL_RE.test(email.trim());
 
   return (
     <SafeAreaView style={styles.container}>
@@ -42,19 +43,24 @@ export default function OnboardingPhone() {
             <LettuceLogo />
           </View>
 
-          <View style={styles.progressWrap}>
-            <OnboardingProgressBar currentStep={1} totalSteps={5} />
-          </View>
-
-          <Text style={styles.title}>What&apos;s your number?</Text>
+          <Text style={styles.title}>Password Reset</Text>
 
           <View style={styles.formWrap}>
-            <PhoneInputRow digits={phoneDigits} onChangeDigits={setPhoneDigits} />
+            <TextInput
+              style={styles.input}
+              placeholder="Email"
+              placeholderTextColor={Colors.light.onboarding.disabledText}
+              autoCapitalize="none"
+              autoCorrect={false}
+              keyboardType="email-address"
+              textContentType="emailAddress"
+              value={email}
+              onChangeText={setEmail}
+            />
             <Text style={styles.caption}>
-              We use your phone number for identity verification to make sure you are not a bot.
+              Enter the email address associated with your account and we'll send you a reset code.
             </Text>
           </View>
-
         </ScrollView>
       </KeyboardAvoidingView>
 
@@ -64,17 +70,18 @@ export default function OnboardingPhone() {
           label="Continue"
           disabled={!isValid}
           onPress={async () => {
-            const {error} = await supabase.auth.signInWithOtp({ phone: '+1' + phoneDigits })
+
+            const {error} = await supabase.auth.resetPasswordForEmail(email);
             if (error) {
               Alert.alert('Error', error.message);
               return;
             }
-            router.push(
-              {
-                pathname: '/onboarding/verify',
-                params: { phone: phoneDigits },
-              } as Href
-            )
+            router.push({
+              pathname: '/verify_pass_reset',
+              params: { email } } as Href
+            );
+
+
           }}
         />
       </View>
@@ -90,6 +97,7 @@ const styles = StyleSheet.create({
   },
   keyboardContainer: {
     flex: 1,
+    width: '100%',
   },
   scrollContent: {
     alignItems: 'center',
@@ -98,10 +106,6 @@ const styles = StyleSheet.create({
   logoWrap: {
     marginTop: 20,
     width: '100%',
-  },
-  progressWrap: {
-    marginTop: 24,
-    width: 300,
   },
   title: {
     color: Colors.light.onboarding.title,
@@ -116,6 +120,21 @@ const styles = StyleSheet.create({
     gap: 16,
     marginTop: 48,
     width: 361,
+  },
+  input: {
+    backgroundColor: '#fff',
+    borderRadius: 8,
+    color: Colors.light.onboarding.title,
+    fontFamily: OnboardingFontFamily.body,
+    fontSize: 14,
+    height: 48,
+    lineHeight: 21,
+    paddingHorizontal: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.15,
+    shadowRadius: 6,
+    width: '100%',
   },
   caption: {
     color: Colors.light.onboarding.caption,

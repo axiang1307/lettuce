@@ -1,5 +1,5 @@
 import { Href, useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import {
   Keyboard,
@@ -17,18 +17,12 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { OnboardingOutlineButton, OnboardingPrimaryButton } from '@/components/onboarding/OnboardingButtons';
 import { LettuceLogo } from '@/components/onboarding/LettuceLogo';
-import { OnboardingProgressBar } from '@/components/onboarding/OnboardingProgressBar';
 import { Colors, OnboardingFontFamily } from '@/constants/theme';
 
-function formatDisplayPhone(phoneDigits: string) {
-  const p = phoneDigits.padEnd(10, 'X').slice(0, 10);
-  return `(${p.slice(0, 3)}) ${p.slice(3, 6)}-${p.slice(6, 10)}`;
-}
-
-export default function OnboardingVerify() {
+export default function VerifyPassReset() {
   const router = useRouter();
-  const params = useLocalSearchParams<{ phone?: string }>();
-  const phone = (params.phone ?? '').replace(/\D/g, '').slice(0, 10);
+  const params = useLocalSearchParams<{ email?: string }>();
+  const email = params.email ?? '';
   const [code, setCode] = useState('');
   const [seconds, setSeconds] = useState(60);
   const inputRef = useRef<TextInput>(null);
@@ -39,7 +33,6 @@ export default function OnboardingVerify() {
     return () => clearTimeout(t);
   }, [seconds]);
 
-  const displayPhone = useMemo(() => formatDisplayPhone(phone), [phone]);
   const paddedCode = code.padEnd(6, ' ');
 
   useEffect(() => {
@@ -64,11 +57,8 @@ export default function OnboardingVerify() {
           <View style={styles.logoWrap}>
             <LettuceLogo />
           </View>
-          <View style={styles.progressWrap}>
-            <OnboardingProgressBar currentStep={1} totalSteps={5} darkLabel />
-          </View>
           <Text style={styles.title}>What&apos;s the code?</Text>
-          <Text style={styles.subtitle}>We sent a code to {displayPhone}</Text>
+          <Text style={styles.subtitle}>We sent a code to {email}</Text>
 
           <Pressable style={styles.codeRow} onPress={() => inputRef.current?.focus()}>
             {Array.from({ length: 6 }).map((_, index) => (
@@ -92,10 +82,7 @@ export default function OnboardingVerify() {
           <Pressable
             disabled={seconds > 0}
             onPress = {async () => {
-            const {error} = await supabase.auth.resend({
-              phone: '+1' + phone,
-              type: 'sms',
-            });
+            const {error} = await supabase.auth.resetPasswordForEmail(email);
             if (error) {
               Alert.alert('Error', error.message);
               return;
@@ -120,15 +107,15 @@ export default function OnboardingVerify() {
           disabled={code.length !== 6}
           onPress={async () => {
             const { error } = await supabase.auth.verifyOtp({
-              phone: '+1' + phone,
+              email,
               token: code,
-              type: 'sms',
+              type: 'recovery',
             });
             if (error) {
-              Alert.alert('Error', error.message);
+              Alert.alert('Error', error.message);//maybe check on this alert message later bc not good
               return;
             }
-            router.push('/onboarding/credentials' as Href);
+            router.push('/password_reset' as Href);
           }}
         />
       </View>
@@ -152,10 +139,6 @@ const styles = StyleSheet.create({
   logoWrap: {
     marginTop: 20,
     width: '100%',
-  },
-  progressWrap: {
-    marginTop: 24,
-    width: 300,
   },
   title: {
     color: Colors.light.onboarding.title,

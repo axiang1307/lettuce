@@ -24,7 +24,7 @@ export default function OnboardingWelcomeDone() {
         <LettuceLogo />
       </View>
       <View style={styles.progressWrap}>
-        <OnboardingProgressBar currentStep={4} totalSteps={4} darkLabel />
+        <OnboardingProgressBar currentStep={5} totalSteps={5} darkLabel />
       </View>
 
       <View style={styles.contentWrap}>
