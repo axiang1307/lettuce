@@ -186,10 +186,12 @@ export default function ProfileTab() {
           </ScrollView>
         </View>
 
-        <View style={styles.sectionHeader}>
+        <Pressable
+          style={({ pressed }) => [styles.sectionHeader, pressed && styles.pressed]}
+          onPress={() => router.push('/settings' as Href)}>
           <Text style={styles.sectionTitle}>Settings</Text>
           <MaterialIcons name="arrow-forward" size={22} color="#131313" />
-        </View>
+        </Pressable>
 
         <View style={styles.bottomPad} />
       </ScrollView>

@@ -17,23 +17,6 @@ export const unstable_settings = {
 
 void SplashScreen.preventAutoHideAsync();
 
-// function SessionGuard() { //for keeping users logged in when app is closed but not signed out
-//                           //the signout is not active yet so sessiongaurd will never be null once logged in
-//   const { session, loading } = useAuth();
-//   const segments = useSegments();
-//   const router = useRouter();
-
-//   useEffect(() => {
-//     if (loading) return;
-//     const inTabs = segments[0] === '(tabs)';
-//     if (session && !inTabs) {
-//       router.replace('/(tabs)' as Href);
-//     }
-//   }, [session, loading, segments]);
-
-//   return null;
-// }
-
 export default function RootLayout() {
   const colorScheme = useColorScheme();
   const [dmSansLoaded] = useDmSansFonts({
@@ -58,13 +41,13 @@ export default function RootLayout() {
     <SafeAreaProvider>
       <AuthProvider>
         <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-          {/* <SessionGuard /> */}
           <Stack screenOptions={{ headerShown: false }}>
-            <Stack.Screen name="index" />
-            <Stack.Screen name="onboarding" />
-            <Stack.Screen name="login" />
-            <Stack.Screen name="(tabs)" />
-            <Stack.Screen name="event" options={{ headerShown: false }} />
+            <Stack.Screen name="index" options={{ gestureEnabled: false }} />
+            <Stack.Screen name="onboarding" options={{ gestureEnabled: false }} />
+            <Stack.Screen name="login" options={{ gestureEnabled: false }} />
+            <Stack.Screen name="(tabs)" options={{ gestureEnabled: false }} />
+            <Stack.Screen name="settings" />
+            <Stack.Screen name="event" />
             <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
           </Stack>
           <StatusBar style="auto" />
