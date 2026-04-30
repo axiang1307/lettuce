@@ -1,5 +1,4 @@
 import { HomeLogo } from '@/components/home/home-logo';
-import { useAuth } from '@/lib/auth-context';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Href, useRouter } from 'expo-router';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
@@ -8,11 +7,9 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 export default function SettingsScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { signOut } = useAuth();
 
-  const handleLogout = async () => {
-    await signOut();
-    router.replace('/onboarding' as Href);
+  const handleLogout = () => {
+    router.replace('/logging-out' as Href);
   };
 
   return (
