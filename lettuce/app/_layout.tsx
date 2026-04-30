@@ -45,6 +45,7 @@ export default function RootLayout() {
             <Stack.Screen name="index" options={{ gestureEnabled: false }} />
             <Stack.Screen name="onboarding" options={{ gestureEnabled: false }} />
             <Stack.Screen name="login" options={{ gestureEnabled: false }} />
+            <Stack.Screen name="logging-out" options={{ gestureEnabled: false }} />
             <Stack.Screen name="(tabs)" options={{ gestureEnabled: false }} />
             <Stack.Screen name="settings" />
             <Stack.Screen name="event" />
