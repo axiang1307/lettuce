@@ -1,6 +1,7 @@
 import { Href, useRouter } from 'expo-router';
+import { supabase } from '@/lib/supabase';
 import React, { useMemo, useState } from 'react';
-import { Keyboard, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Alert, Keyboard, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { OnboardingPrimaryButton } from '@/components/onboarding/OnboardingButtons';
@@ -12,7 +13,53 @@ export default function OnboardingName() {
   const router = useRouter();
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
   const isValid = useMemo(() => firstName.trim().length > 0 && lastName.trim().length > 0, [firstName, lastName]);
+
+  const handleContinue = async () => {
+    if (!isValid || isSaving) return;
+
+    const trimmedFirstName = firstName.trim();
+    const trimmedLastName = lastName.trim();
+    const fullName = `${trimmedFirstName} ${trimmedLastName}`;
+
+    setIsSaving(true);
+
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser();
+
+    if (userError || !user) {
+      setIsSaving(false);
+      Alert.alert('Error', userError?.message ?? 'Please sign in again before continuing.');
+      return;
+    }
+
+    const { error } = await supabase
+      .from('profiles')
+      .upsert(
+        {
+          id: user.id,
+          full_name: fullName,
+        },
+        { onConflict: 'id' }
+      );
+
+    setIsSaving(false);
+
+    if (error) {
+      Alert.alert('Error', error.message);
+      return;
+    }
+
+    router.push(
+      {
+        pathname: '/onboarding/calendar-sync',
+        params: { firstName: trimmedFirstName },
+      } as Href
+    );
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -62,15 +109,8 @@ export default function OnboardingName() {
       <View style={styles.buttonWrap}>
         <OnboardingPrimaryButton
           label="Continue"
-          disabled={!isValid}
-          onPress={() =>
-            router.push(
-              {
-                pathname: '/onboarding/calendar-sync',
-                params: { firstName: firstName.trim() },
-              } as Href
-            )
-          }
+          disabled={!isValid || isSaving}
+          onPress={handleContinue}
         />
       </View>
     </SafeAreaView>
