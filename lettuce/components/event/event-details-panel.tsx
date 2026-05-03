@@ -155,10 +155,11 @@ const styles = StyleSheet.create({
     backgroundColor: '#e4e4e4',
   },
   actionsList: {
-    gap: 6,
+    gap: 10,
   },
   actionWrap: {
     gap: 2,
+    minHeight: 74,
   },
   action: {
     borderRadius: 8,

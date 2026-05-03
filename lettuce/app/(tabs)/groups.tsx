@@ -144,8 +144,8 @@ export default function GroupsTab() {
             cta="Remind"
             avatars={[IMG.avatarA, IMG.avatarB, IMG.avatarC, IMG.avatarD]}
             plusCount={2}
-            onPress={() => openEvent('evt-1')}
-            onCtaPress={() => openEvent('evt-1', 'calendar')}
+            // onPress={() => openEvent('evt-1')} remind not do anything yet
+            // onCtaPress={() => openEvent('evt-1', 'calendar')}
           />
         </View>
 
@@ -161,7 +161,7 @@ export default function GroupsTab() {
               status="Planning"
               avatars={[IMG.avatarA, IMG.avatarE, IMG.avatarF]}
               onPress={() => openEvent('evt-2')}
-              onCtaPress={() => openEvent('evt-2', 'poll')}
+              onCtaPress={() => openEvent('evt-2')} 
             />
             <GroupsCard
               eventId="evt-3"
@@ -172,7 +172,7 @@ export default function GroupsTab() {
               status="Planning"
               avatars={[IMG.avatarA, IMG.avatarG, IMG.avatarH]}
               onPress={() => openEvent('evt-3')}
-              onCtaPress={() => openEvent('evt-3', 'poll')}
+              onCtaPress={() => openEvent('evt-3')}
             />
           </View>
         </View>

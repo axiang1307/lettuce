@@ -68,7 +68,7 @@ export default function EventDetailScreen() {
             title={titleByMode[flowMode]}
             subtitle={subtitleByMode[flowMode]}
             onBack={handleBack}
-            showImage={flowMode !== 'activity'}
+            showImage={flowMode !== 'activity' && flowMode !== 'poll'} 
             showTitle={flowMode !== 'detail'}
             showParticipants={flowMode !== 'detail' && flowMode !== 'activity'}
             topInset={Math.max(insets.top - 6, 0)}
