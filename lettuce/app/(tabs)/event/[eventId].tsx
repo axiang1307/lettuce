@@ -1,6 +1,7 @@
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useMemo, useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ActivityPanel } from '@/components/event/activity-panel';
@@ -30,7 +31,7 @@ export default function EventDetailScreen() {
 
   const titleByMode = {
     detail: event?.title ?? 'Event',
-    calendar: `${event?.title ?? 'Event'} Calendar`,
+    calendar: `${event?.title ?? 'Event'}\nCalendar`,
     poll: 'Poll',
     activity: 'Activity',
   };
@@ -54,57 +55,68 @@ export default function EventDetailScreen() {
     router.replace('/(tabs)/groups');
   };
 
-  return (
-    <>
-      <Stack.Screen options={{ title: event?.title ?? 'Event', headerShown: false }} />
-      {!event ? (
+  if (!event) {
+    return (
+      <>
+        <Stack.Screen options={{ title: 'Event', headerShown: false }} />
         <View style={styles.centered}>
           <Text style={styles.muted}>No event found for id: {String(eventId)}</Text>
         </View>
-      ) : (
-        <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
-          <EventFlowHeader
+      </>
+    );
+  }
+
+  if (flowMode === 'calendar') {
+    return (
+      <GestureHandlerRootView style={{ flex: 1 }}>
+        <Stack.Screen options={{ headerShown: false }} />
+        <EventFlowHeader
+          event={event}
+          title={titleByMode.calendar}
+          onBack={handleBack}
+          showImage
+          showTitle
+          showParticipants
+          topInset={Math.max(insets.top - 6, 0)}
+        />
+        <CalendarPanel event={event} onSendToPoll={() => setFlowMode('poll')} />
+      </GestureHandlerRootView>
+    );
+  }
+
+  return (
+    <>
+      <Stack.Screen options={{ title: event.title, headerShown: false }} />
+      <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
+        <EventFlowHeader
+          event={event}
+          title={titleByMode[flowMode]}
+          subtitle={subtitleByMode[flowMode]}
+          onBack={handleBack}
+          showImage={flowMode !== 'activity' && flowMode !== 'poll'}
+          showTitle={flowMode !== 'detail'}
+          showParticipants={flowMode !== 'detail' && flowMode !== 'activity'}
+          topInset={Math.max(insets.top - 6, 0)}
+        />
+
+        {flowMode === 'detail' ? (
+          <EventDetailsPanel
             event={event}
-            title={titleByMode[flowMode]}
-            subtitle={subtitleByMode[flowMode]}
-            onBack={handleBack}
-            showImage={flowMode !== 'activity' && flowMode !== 'poll'} 
-            showTitle={flowMode !== 'detail'}
-            showParticipants={flowMode !== 'detail' && flowMode !== 'activity'}
-            topInset={Math.max(insets.top - 6, 0)}
-            fullBleed
+            onOpenCalendar={() => setFlowMode('calendar')}
+            onOpenPoll={() => setFlowMode('poll')}
+            onOpenActivity={() => setFlowMode('activity')}
           />
+        ) : null}
 
-          {flowMode === 'detail' ? (
-            <EventDetailsPanel
-              event={event}
-              onOpenCalendar={() => setFlowMode('calendar')}
-              onOpenPoll={() => setFlowMode('poll')}
-              onOpenActivity={() => setFlowMode('activity')}
-            />
-          ) : null}
+        {flowMode === 'poll' ? (
+          <PollPanel
+            event={event}
+            onSendToCalendar={() => setFlowMode('calendar')}
+          />
+        ) : null}
 
-          {flowMode === 'calendar' ? (
-            <CalendarPanel
-              event={event}
-              onSendToPoll={() => {
-                setFlowMode('poll');
-              }}
-            />
-          ) : null}
-
-          {flowMode === 'poll' ? (
-            <PollPanel
-              event={event}
-              onSendToCalendar={() => {
-                setFlowMode('calendar');
-              }}
-            />
-          ) : null}
-
-          {flowMode === 'activity' ? <ActivityPanel event={event} /> : null}
-        </ScrollView>
-      )}
+        {flowMode === 'activity' ? <ActivityPanel event={event} /> : null}
+      </ScrollView>
     </>
   );
 }

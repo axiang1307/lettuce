@@ -34,6 +34,8 @@ export default function TabLayout() {
           paddingTop: 2,
         },
       }}>
+        <Tabs.Screen name="sandbox" options={{ href: null }} />                                                    
+  <Tabs.Screen name="event" options={{ href: null }} />
       <Tabs.Screen
         name="index"
         options={{
@@ -63,5 +65,6 @@ export default function TabLayout() {
         }}
       />
     </Tabs>
+    
   );
 }
