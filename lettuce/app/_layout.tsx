@@ -48,7 +48,6 @@ export default function RootLayout() {
             <Stack.Screen name="logging-out" options={{ gestureEnabled: false }} />
             <Stack.Screen name="(tabs)" options={{ gestureEnabled: false }} />
             <Stack.Screen name="settings" />
-            <Stack.Screen name="event" />
             <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
           </Stack>
           <StatusBar style="auto" />

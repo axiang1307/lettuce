@@ -110,7 +110,7 @@ export default function GroupsTab() {
   const openEvent = (eventId: string, mode?: 'detail' | 'calendar' | 'poll' | 'activity') => {
     router.push({
       pathname: '/(tabs)/event/[eventId]',
-      params: { eventId, ...(mode ? { mode } : {}) },
+      params: { eventId, from: '/(tabs)/groups', ...(mode ? { mode } : {}) },
     } as Href);
   };
 

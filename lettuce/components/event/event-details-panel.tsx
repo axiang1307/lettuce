@@ -1,6 +1,7 @@
-import { MaterialIcons } from '@expo/vector-icons';
+import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import React from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { ImageBackground, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import type { HomeFeedEvent } from '@/data/home-feed';
 
@@ -8,6 +9,7 @@ import { ParticipantsProfiles } from '../home/participants-profiles';
 
 type EventDetailsPanelProps = {
   event: HomeFeedEvent;
+  onBack: () => void;
   onOpenCalendar: () => void;
   onOpenPoll: () => void;
   onOpenActivity: () => void;
@@ -37,8 +39,19 @@ function DetailAction({
   );
 }
 
-export function EventDetailsPanel({ event, onOpenCalendar, onOpenPoll, onOpenActivity }: EventDetailsPanelProps) {
+export function EventDetailsPanel({ event, onBack, onOpenCalendar, onOpenPoll, onOpenActivity }: EventDetailsPanelProps) {
+  const insets = useSafeAreaInsets();
   return (
+    <View style={styles.screen}>
+      <ImageBackground
+        source={event.imageUrl}
+        style={[styles.heroWrap, { paddingTop: Math.max(insets.top - 6, 0) + 12 }]}
+        imageStyle={{ transform: [{ scale: 1.18 }] }}>
+        <Pressable onPress={onBack} style={styles.iconBtn}>
+          <Ionicons name="arrow-back" size={30} color="#131313" />
+        </Pressable>
+      </ImageBackground>
+      <ScrollView contentContainerStyle={styles.scroll}>
     <View style={styles.card}>
       <View style={styles.headerRow}>
         <Text style={styles.heading}>{event.title}</Text>
@@ -93,10 +106,32 @@ export function EventDetailsPanel({ event, onOpenCalendar, onOpenPoll, onOpenAct
         </Pressable>
       </View>
     </View>
+      </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  screen: {
+    flex: 1,
+    backgroundColor: '#f5f5f5',
+  },
+  heroWrap: {
+    height: 240,
+    paddingHorizontal: 12,
+  },
+  iconBtn: {
+    width: 36,
+    height: 36,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  scroll: {
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    paddingBottom: 44,
+    gap: 16,
+  },
   card: {
     backgroundColor: '#ffffff',
     borderRadius: 16,

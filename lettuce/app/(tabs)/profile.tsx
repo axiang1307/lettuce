@@ -101,7 +101,7 @@ export default function ProfileTab() {
   const openEvent = (eventId: string, mode?: 'detail' | 'calendar' | 'poll' | 'activity') => {
     router.push({
       pathname: '/(tabs)/event/[eventId]',
-      params: { eventId, ...(mode ? { mode } : {}) },
+      params: { eventId, from: '/(tabs)/profile', ...(mode ? { mode } : {}) },
     } as Href);
   };
 

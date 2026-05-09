@@ -63,7 +63,7 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen name="sandbox" options={{ href: null }} />
-      <Tabs.Screen name="event" options={{ href: null }} />
+      <Tabs.Screen name="event/[eventId]" options={{ href: null }} />
     </Tabs>
     
   );
