@@ -15,7 +15,7 @@ const SKIP_ONBOARDING_AND_LOGIN = true;
 export default function Index() {
   const { session, loading } = useAuth();
 
-  
+
 
   if (loading) {
     return (
@@ -31,7 +31,7 @@ export default function Index() {
   }
 
   if (SKIP_ONBOARDING_AND_LOGIN || session) {
-    return <Redirect href={'/sandbox' as Href} />;
+    return <Redirect href={'/(tabs)' as Href} />;
   }
 
   return <Redirect href={'/onboarding' as Href} />;

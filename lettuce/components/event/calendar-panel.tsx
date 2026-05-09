@@ -1,79 +1,98 @@
-import React, { useState } from 'react';//default import from react
-import { View , Text, StyleSheet, Pressable, ImageBackground, ScrollView } from 'react-native';//named exports from react-native
+import React, { useState, useMemo } from 'react';
+import { View, Text, StyleSheet, Pressable, ImageBackground, ScrollView } from 'react-native';
 import BottomSheet, { BottomSheetView } from '@gorhom/bottom-sheet';
-import { GestureHandlerRootView } from 'react-native-gesture-handler'; 
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { Ionicons } from '@expo/vector-icons';
-import { HomeFeedEvent  } from '@/data/home-feed';
-//need to import because react - native starts with nothing
-const IMG = {     //images needed                                                                                                
-    p1: require('@/assets/images/figma-home/home-avatar-1.png'),
-    p2: require('@/assets/images/figma-home/home-avatar-2.png'),                                                    
-    p3: require('@/assets/images/figma-home/home-avatar-3.png'),   
-    header: require('@/assets/images/figma-home/home-card-2.png')                                                 
-};
-const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 
-  'November', 'December'];                                                                                        
-const dow = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];                                                                  
-const hours = ['8 AM', '9 AM', '10 AM', '11 AM', '12 PM', 
-                '1 PM', '2 PM', '3 PM', '4 PM', '5 PM', 
-                '6 PM', '7 PM', '8 PM', '9 PM', '10 PM', 
-]
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { ParticipantsProfiles } from '@/components/home/participants-profiles';
+import { HomeFeedEvent } from '@/data/home-feed';
+const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October',
+  'November', 'December'];
+const dow = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+const hours = ['8 AM', '9 AM', '10 AM', '11 AM', '12 PM',
+                '1 PM', '2 PM', '3 PM', '4 PM', '5 PM',
+                '6 PM', '7 PM', '8 PM', '9 PM', '10 PM',
+];
+const ROW_H = 59;
+const CELL_W = 48.3;
+
+function parseBlock(label: string, timeRange: string) {
+  const dayMap: Record<string, number> = {
+    sunday: 0, monday: 1, tuesday: 2, wednesday: 3,
+    thursday: 4, friday: 5, saturday: 6,
+  };
+  const col = dayMap[label.split(',')[0].trim().toLowerCase()] ?? -1;
+  const parseHour = (s: string) => {
+    const isPM = s.toLowerCase().includes('pm');
+    const n = parseInt(s.replace(/[^0-9]/g, ''), 10);
+    if (isPM && n !== 12) return n + 12;
+    if (!isPM && n === 12) return 0;
+    return n;
+  };
+  const [startStr, endStr] = timeRange.split('-');
+  const suffix = endStr.toLowerCase().includes('am') ? 'AM' : 'PM';
+  const startHour = parseHour(startStr.includes('M') ? startStr : startStr + suffix);
+  const endHour = parseHour(endStr);
+  return { col, top: (startHour - 8) * ROW_H, height: (endHour - startHour) * ROW_H };
+}
 
 type CalendarPanelProps = {
   event: HomeFeedEvent;
+  onBack: () => void;
   onSendToPoll: () => void;
 };
 
-
-
-// function parseBlock(label: string, timeRange: string) {
-//   const dayMap: Record<string, number> = {
-//     sunday: 0, monday: 1, tuesday: 2, wednesday: 3,
-//     thursday: 4, friday: 5, saturday: 6,
-//   };
-//   const dayName = label.split(',')[0].trim().toLowerCase();
-//   const col = dayMap[dayName] ?? -1;
-
-//   const parseHour = (s: string) => {
-//     const isPM = s.toLowerCase().includes('pm');
-//     const n = parseInt(s.replace(/[^0-9]/g, ''), 10);
-//     if (isPM && n !== 12) return n + 12;
-//     if (!isPM && n === 12) return 0;
-//     return n;
-//   };
-//   const [startStr, endStr] = timeRange.split('-');
-//   const suffix = endStr.toLowerCase().includes('am') ? 'AM' : 'PM';
-//   const startHour = parseHour(startStr.includes('M') ? startStr : startStr + suffix);
-//   const endHour = parseHour(endStr);
-
-//   const top = (startHour - 8) * ROW_H;
-//   const height = (endHour - startHour) * ROW_H;
-//   return { col, top, height };
-// }
-
-export function CalendarPanel({ event, onSendToPoll }: CalendarPanelProps) {
-  const [selectedId, setSelectedId] = useState<string | undefined>(
-    event.calendar.selectedOptionId ?? event.calendar.options[0]?.id,
-  );
-
+export function CalendarPanel({ event, onBack, onSendToPoll }: CalendarPanelProps) {
+    const insets = useSafeAreaInsets();
     const [week, changeWeek] = useState(0);
+    const [selectedId, setSelectedId] = useState<string | undefined>(
+        event.calendar.selectedOptionId ?? event.calendar.options[0]?.id,
+    );
+    const [hourboxWidth, setHourboxWidth] = useState(0);
+    const blocks = useMemo(
+        () => event.calendar.options.map((o) => ({ ...o, ...parseBlock(o.label, o.timeRange) })),
+        [event.calendar.options],
+    );
 
     const now = new Date();                                                                                           
-    const day_of_month = now.getDate();                                                                               
-    const curr_month = now.getMonth();                                                                                
-    const day_of_week = now.getDay();
-    const day_nums = Array.from({length: 7}, (_, i) => {                                                              
+const day_of_month = now.getDate();                                                                               
+const curr_month = now.getMonth();                                                                                
+const day_of_week = now.getDay();
+const day_nums = Array.from({length: 7}, (_, i) => {                                                              
     const d = new Date(now);
     d.setDate(day_of_month - day_of_week + i + week * 7);                                                                    
     return d.getDate();
-}); 
-    const weekStart = new Date(now);                                                                                  
-    weekStart.setDate(day_of_month - day_of_week + week * 7);
-    const new_month = weekStart.getMonth();                                                                           
-    const year = weekStart.getFullYear();
+});
+const weekStart = new Date(now);                                                                                  
+weekStart.setDate(day_of_month - day_of_week + week * 7);
+const new_month = weekStart.getMonth();                                                                           
+const year = weekStart.getFullYear();
 
-  return (
-     <View style = {styles.safeview}>
+    
+//poll options
+
+    //the front end stuff
+    return (
+        //safeareaview instead of view so that the text shows
+        <GestureHandlerRootView style = {{ flex: 1 }}>
+            <View style = {styles.safeview}>  
+                <ImageBackground
+                source = {event.imageUrl}
+                style = {[styles.header, { paddingTop: insets.top + 8 }]}
+                imageStyle = { {transform: [{ scale: 1.18},{translateY: 16}], opacity: 0.55} }
+                >
+                    <Pressable onPress={onBack}>
+                        <View style = {styles.arrow}>
+                            <Ionicons name = "arrow-back" size = {30} />
+                        </View>
+                    </Pressable>
+                    <View>
+                        <Text style = {styles.title}>{`${event.title}\nCalendar`}</Text>
+                    </View>
+                    <View style = {styles.profiles}>
+                        <ParticipantsProfiles avatars={event.participants.avatars} moreCount={event.participants.moreCount ?? 0}/>
+                    </View>
+                </ImageBackground>
                 <View style = {styles.calendar}>
                     <View style = {styles.monthHeader}>
                         <Text style = {{
@@ -131,34 +150,46 @@ export function CalendarPanel({ event, onSendToPoll }: CalendarPanelProps) {
                         </View>
                     </View>
                     <View style = {styles.times}>
-                        <ScrollView style = {{
-                            flex: 1,
-
-                        }}
-                        showsVerticalScrollIndicator = {false}
-                        >
-                            
+                        <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
+                            <View style={{ position: 'relative' }}>
                                 {hours.map((hour, index) => (
-                                    <View key = {index} style = {{flexDirection: 'row'}}>
-                                        <View style = {styles.hourbox}>
-                                            <Text style = {{color: '#878787', fontSize: 12, fontFamily: 'DM Sans', fontWeight: '400', lineHeight: 18, wordWrap: 'break-word'}}>{hour}</Text>
+                                    <View key={index} style={{ flexDirection: 'row' }}>
+                                        <View
+                                            style={styles.hourbox}
+                                            onLayout={index === 0 ? (e) => setHourboxWidth(e.nativeEvent.layout.width) : undefined}
+                                        >
+                                            <Text style={{ color: '#878787', fontSize: 12, fontFamily: 'DM Sans', fontWeight: '400', lineHeight: 18, wordWrap: 'break-word' }}>{hour}</Text>
                                         </View>
-                                        {day_nums.map((day,index) => (
-                                            <View key = {index} style = {{
-                                                width: 48.3, 
+                                        {day_nums.map((day, i) => (
+                                            <View key={i} style={{
+                                                width: CELL_W,
                                                 borderLeftWidth: 1,
-                                                borderLeftColor: '#dbdbdb',          
+                                                borderLeftColor: '#dbdbdb',
                                                 borderBottomWidth: 1,
                                                 borderBottomColor: '#dbdbdb',
-                                            }}>
-
-                                            </View>
-                                        )
-                                        )}
+                                            }} />
+                                        ))}
                                     </View>
-                                    
-                                )
-                            )}
+                                ))}
+                                {hourboxWidth > 0 && blocks.map((b) =>
+                                    b.col >= 0 && b.height > 0 ? (
+                                        <Pressable
+                                            key={b.id}
+                                            onPress={() => setSelectedId(b.id)}
+                                            style={[
+                                                styles.block,
+                                                {
+                                                    top: b.top,
+                                                    height: b.height,
+                                                    left: hourboxWidth + b.col * CELL_W,
+                                                    width: CELL_W,
+                                                },
+                                                b.id === selectedId && styles.blockSelected,
+                                            ]}
+                                        />
+                                    ) : null
+                                )}
+                            </View>
                         </ScrollView>
                     </View>
                 </View>
@@ -205,40 +236,38 @@ export function CalendarPanel({ event, onSendToPoll }: CalendarPanelProps) {
                         <View style = {{
                             height: 24
                         }}></View>
-                        <View style = {styles.optionbox}>
-                            <View style = {styles.addOption}>
-                                <Text style = {{color: 'black', fontSize: 18, fontFamily: 'Montserrat', fontWeight: '600', lineHeight: 20.80, wordWrap: 'break-word', paddingTop: 6
-    }}> 
+                        <View style={styles.optionbox}>
+                            {event.calendar.options.slice(0, 2).map((item) => {
+                                const isSelected = item.id === selectedId;
+                                return (
+                                    <Pressable
+                                        key={item.id}
+                                        onPress={() => setSelectedId(item.id)}
+                                        style={[styles.addOption, isSelected && styles.optionSelected]}
+                                    >
+                                        <Text style={{ color: 'black', fontSize: 18, fontFamily: 'Montserrat', fontWeight: '600', lineHeight: 20.80, wordWrap: 'break-word', paddingTop: 6 }}>
+                                            {item.label}
+                                        </Text>
+                                        <Text style={{ color: 'black', fontSize: 18, fontFamily: 'Montserrat', fontWeight: '600', lineHeight: 20.80, wordWrap: 'break-word', paddingTop: 6 }}>
+                                            {item.timeRange}
+                                        </Text>
+                                    </Pressable>
+                                );
+                            })}
+                            <View style={styles.addOption}>
+                                <Text style={{ color: 'black', fontSize: 18, fontFamily: 'Montserrat', fontWeight: '600', lineHeight: 20.80, wordWrap: 'break-word', paddingTop: 6 }}>
                                     Add Option
                                 </Text>
-                                <Pressable style={styles.button}>                                                                                                        
+                                <Pressable style={styles.button}>
                                     <Ionicons name="add" size={20} color="#131313" />
-                                </Pressable>    
-                            </View>
-                            <View style = {styles.addOption}>
-                                <Text style = {{color: 'black', fontSize: 18, fontFamily: 'Montserrat', fontWeight: '600', lineHeight: 20.80, wordWrap: 'break-word', paddingTop: 6
-    }}> 
-                                    Add Option
-                                </Text>
-                                <Pressable style={styles.button}>                                                                                                        
-                                    <Ionicons name="add" size={20} color="#131313" />
-                                </Pressable>    
-                            </View>
-                            <View style = {styles.addOption}>
-                                <Text style = {{color: 'black', fontSize: 18, fontFamily: 'Montserrat', fontWeight: '600', lineHeight: 20.80, wordWrap: 'break-word', paddingTop: 6
-    }}> 
-                                    Add Option
-                                </Text>
-                                <Pressable style={styles.button}>                                                                                                        
-                                    <Ionicons name="add" size={20} color="#131313" />
-                                </Pressable>    
+                                </Pressable>
                             </View>
                         </View>
                         <View style = {{
                             height: 36,
                             width: '100%',
                         }}>
-                            <Pressable style = {{
+                            <Pressable onPress={onSendToPoll} style = {{
                                 height: 36,
                                 alignSelf: 'flex-end',
                                 paddingHorizontal: 16,
@@ -247,11 +276,11 @@ export function CalendarPanel({ event, onSendToPoll }: CalendarPanelProps) {
                                 justifyContent: 'center',
                                 alignContent: 'center',
                                 borderRadius: 32,
-                                shadowColor: '#000',                                                                                       
+                                shadowColor: '#000',
                                 shadowOpacity: 0.15,
-                                shadowRadius: 2,                                                                                           
-                                shadowOffset: { width: 0, height: 2 },                                                                     
-                                elevation: 2,  
+                                shadowRadius: 2,
+                                shadowOffset: { width: 0, height: 2 },
+                                elevation: 2,
 
                             }}>
                                 <Text style = {{
@@ -264,7 +293,8 @@ export function CalendarPanel({ event, onSendToPoll }: CalendarPanelProps) {
                     </BottomSheetView>
                 </BottomSheet>
             </View>
-  );
+        </GestureHandlerRootView>
+    )
 }
 
 const styles = StyleSheet.create({
@@ -273,8 +303,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
         backgroundColor: 'white',
-        borderTopLeftRadius: 20,                  
-    borderTopRightRadius: 20,  
+
     },
     //823 vertical flex
     header:{
@@ -282,7 +311,6 @@ const styles = StyleSheet.create({
         width: '100%',
         paddingVertical: 8,
         paddingHorizontal: 16,
-        paddingTop: 50,
         backgroundColor: 'rgba(255, 255, 255, 0.75)'
     },
     calendar:{
@@ -366,7 +394,12 @@ const styles = StyleSheet.create({
     optionbox: {
         height: 215,
         paddingBottom: 24,
-        justifyContent: 'space-between'
+        justifyContent: 'space-between',
+    },
+    optionSelected: {
+        borderWidth: 1.5,
+        borderColor: '#6096c3',
+        backgroundColor: '#d2e1ed',
     },
     addOption:{
         backgroundColor: '#EAF3F9',
@@ -400,6 +433,17 @@ const styles = StyleSheet.create({
         shadowRadius: 2,                                                                                           
         shadowOffset: { width: 0, height: 2 },                                                                     
         elevation: 2,  
+    },
+    block: {
+        position: 'absolute',
+        backgroundColor: '#b6cfe3',
+        borderRadius: 6,
+        opacity: 0.85,
+    },
+    blockSelected: {
+        opacity: 1,
+        borderWidth: 2,
+        borderColor: '#6096c3',
     },
     bigButton: {
         width: 48,                                                                                             

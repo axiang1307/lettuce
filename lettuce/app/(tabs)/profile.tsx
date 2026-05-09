@@ -100,7 +100,7 @@ export default function ProfileTab() {
   const insets = useSafeAreaInsets();
   const openEvent = (eventId: string, mode?: 'detail' | 'calendar' | 'poll' | 'activity') => {
     router.push({
-      pathname: '/event/[eventId]',
+      pathname: '/(tabs)/event/[eventId]',
       params: { eventId, ...(mode ? { mode } : {}) },
     } as Href);
   };

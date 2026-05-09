@@ -109,7 +109,7 @@ export default function GroupsTab() {
   const insets = useSafeAreaInsets();
   const openEvent = (eventId: string, mode?: 'detail' | 'calendar' | 'poll' | 'activity') => {
     router.push({
-      pathname: '/event/[eventId]',
+      pathname: '/(tabs)/event/[eventId]',
       params: { eventId, ...(mode ? { mode } : {}) },
     } as Href);
   };

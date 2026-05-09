@@ -34,8 +34,6 @@ export default function TabLayout() {
           paddingTop: 2,
         },
       }}>
-        <Tabs.Screen name="sandbox" options={{ href: null }} />                                                    
-  <Tabs.Screen name="event" options={{ href: null }} />
       <Tabs.Screen
         name="index"
         options={{
@@ -64,6 +62,8 @@ export default function TabLayout() {
           tabBarIcon: ({ color }) => <IconSymbol size={26} name="person.crop.circle" color={color} />,
         }}
       />
+      <Tabs.Screen name="sandbox" options={{ href: null }} />
+      <Tabs.Screen name="event" options={{ href: null }} />
     </Tabs>
     
   );

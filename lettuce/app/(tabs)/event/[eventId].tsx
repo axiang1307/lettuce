@@ -1,7 +1,6 @@
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useMemo, useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
-import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ActivityPanel } from '@/components/event/activity-panel';
@@ -48,11 +47,7 @@ export default function EventDetailScreen() {
       setFlowMode('detail');
       return;
     }
-    if (router.canGoBack()) {
-      router.back();
-      return;
-    }
-    router.replace('/(tabs)/groups');
+    router.replace('/(tabs)');
   };
 
   if (!event) {
@@ -68,19 +63,10 @@ export default function EventDetailScreen() {
 
   if (flowMode === 'calendar') {
     return (
-      <GestureHandlerRootView style={{ flex: 1 }}>
+      <>
         <Stack.Screen options={{ headerShown: false }} />
-        <EventFlowHeader
-          event={event}
-          title={titleByMode.calendar}
-          onBack={handleBack}
-          showImage
-          showTitle
-          showParticipants
-          topInset={Math.max(insets.top - 6, 0)}
-        />
-        <CalendarPanel event={event} onSendToPoll={() => setFlowMode('poll')} />
-      </GestureHandlerRootView>
+        <CalendarPanel event={event} onBack={handleBack} onSendToPoll={() => setFlowMode('poll')} />
+      </>
     );
   }
 
