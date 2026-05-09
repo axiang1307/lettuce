@@ -46,15 +46,24 @@ export function ParticipantsProfiles({
           <View
             key={`${idx}`}
             style={[
-              styles.avatar,
+              styles.avatarWrap,
               {
                 width: size,
                 height: size,
-                borderRadius: size / 2,
                 marginLeft: idx === 0 ? 0 : -overlap,
               },
             ]}>
-            <Image source={resolveSource(src)} style={styles.avatarImage} contentFit="cover" />
+            <View
+              style={[
+                styles.avatar,
+                {
+                  width: size,
+                  height: size,
+                  borderRadius: size / 2,
+                },
+              ]}>
+              <Image source={resolveSource(src)} style={styles.avatarImage} contentFit="cover" />
+            </View>
             {statusIcons[idx] && statusIcons[idx] !== 'none' ? (
               <StatusIcon status={statusIcons[idx] as 'confirmed' | 'rejected'} />
             ) : null}
@@ -93,6 +102,9 @@ const styles = StyleSheet.create({
     gap: 4,
     paddingRight: 0,
   },
+  avatarWrap: {
+    position: 'relative',
+  },
   avatar: {
     borderWidth: 1.5,
     borderColor: '#f0f2e3',
@@ -128,15 +140,16 @@ const styles = StyleSheet.create({
   },
   statusBadge: {
     position: 'absolute',
-    right: -1,
-    bottom: -1,
-    width: 18,
-    height: 18,
-    borderRadius: 9,
+    right: -2,
+    bottom: -2,
+    width: 20,
+    height: 20,
+    borderRadius: 10,
     backgroundColor: '#f3f3f3',
+    borderWidth: 1.5,
+    borderColor: '#ffffff',
     alignItems: 'center',
     justifyContent: 'center',
-    padding: 2,
   },
   statusText: {
     fontFamily: 'Material Icons',
