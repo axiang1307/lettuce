@@ -62,9 +62,7 @@ export default function TabLayout() {
           tabBarIcon: ({ color }) => <IconSymbol size={26} name="person.crop.circle" color={color} />,
         }}
       />
-      <Tabs.Screen name="sandbox" options={{ href: null }} />
       <Tabs.Screen name="event/[eventId]" options={{ href: null }} />
     </Tabs>
-    
   );
 }

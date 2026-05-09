@@ -10,7 +10,7 @@ import { ActivityIndicator, StyleSheet, View } from 'react-native';
  * PLACEHOLDER DEV SHORTCUT: flip to `true` to jump straight to main tabs while building UI
  * (no persistence — cold start always runs this file).
  */
-const SKIP_ONBOARDING_AND_LOGIN = true;
+const SKIP_ONBOARDING_AND_LOGIN = false;
 
 export default function Index() {
   const { session, loading } = useAuth();
