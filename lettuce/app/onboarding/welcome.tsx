@@ -60,9 +60,9 @@ export default function OnboardingWelcomeDone() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.light.background, alignItems: 'center' },
   logoWrap: { marginTop: 8, width: '100%' },
-  progressWrap: { marginTop: 10, width: 300 },
-  contentWrap: { alignItems: 'center', gap: 30, marginTop: 48 },
-  headerWrap: { alignItems: 'center', gap: 16, width: 370 },
+  progressWrap: { marginTop: 10, width: '80%', maxWidth: 320 },
+  contentWrap: { alignItems: 'center', gap: 30, marginTop: 48, width: '100%' },
+  headerWrap: { alignItems: 'center', gap: 16, width: '100%', paddingHorizontal: 16 },
   title: {
     color: Colors.light.onboarding.title,
     fontFamily: OnboardingFontFamily.heading,
@@ -75,7 +75,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     lineHeight: 27,
   },
-  heroWrap: { alignItems: 'center', height: 399, justifyContent: 'center', width: 323 },
+  heroWrap: { alignItems: 'center', height: 399, justifyContent: 'center', width: '100%', maxWidth: 323 },
   stackBackground: { position: 'absolute', right: 24, top: 10, transform: [{ rotate: '27deg' }] },
   floatingTop: {
     borderRadius: 8,
@@ -127,7 +127,8 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     marginTop: 'auto',
     marginBottom: 18,
-    width: 370,
+    width: '100%',
+    paddingHorizontal: 16,
   },
   backBtn: {
     borderColor: Colors.light.tint,

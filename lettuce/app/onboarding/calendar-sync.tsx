@@ -99,8 +99,8 @@ export default function OnboardingCalendarSync() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.light.background, alignItems: 'center' },
   logoWrap: { marginTop: 8, width: '100%' },
-  progressWrap: { marginTop: 10, width: 300 },
-  contentWrap: { marginTop: 48, width: 371, gap: 30 },
+  progressWrap: { marginTop: 10, width: '80%', maxWidth: 320 },
+  contentWrap: { marginTop: 48, width: '100%', paddingHorizontal: 16, gap: 30 },
   headerWrap: { alignItems: 'center', gap: 16 },
   title: {
     color: Colors.light.onboarding.title,
@@ -115,7 +115,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     lineHeight: 27,
     textAlign: 'center',
-    width: 296,
+    paddingHorizontal: 30,
   },
   optionsWrap: { gap: 20, width: '100%' },
   option: {
@@ -151,7 +151,8 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     marginTop: 'auto',
     marginBottom: 18,
-    width: 370,
+    width: '100%',
+    paddingHorizontal: 16,
   },
   backBtn: {
     borderColor: Colors.light.tint,

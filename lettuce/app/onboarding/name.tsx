@@ -125,6 +125,7 @@ const styles = StyleSheet.create({
   },
   keyboardContainer: {
     flex: 1,
+    width: '100%',
   },
   scrollContent: {
     alignItems: 'center',
@@ -136,7 +137,8 @@ const styles = StyleSheet.create({
   },
   progressWrap: {
     marginTop: 24,
-    width: 300,
+    width: '80%',
+    maxWidth: 320,
   },
   title: {
     color: Colors.light.onboarding.title,
@@ -149,7 +151,8 @@ const styles = StyleSheet.create({
   formWrap: {
     gap: 12,
     marginTop: 40,
-    width: 361,
+    width: '100%',
+    paddingHorizontal: 16,
   },
   input: {
     backgroundColor: '#fff',
@@ -157,7 +160,7 @@ const styles = StyleSheet.create({
     color: Colors.light.onboarding.title,
     fontFamily: OnboardingFontFamily.body,
     fontSize: 14,
-    height: 40,
+    height: 48,
     lineHeight: 21,
     paddingHorizontal: 16,
     shadowColor: '#000',
@@ -172,11 +175,12 @@ const styles = StyleSheet.create({
     lineHeight: 21,
     marginTop: 16,
     textAlign: 'center',
-    width: 292,
+    paddingHorizontal: 30,
   },
   buttonWrap: {
     marginTop: 'auto',
     marginBottom: 36,
-    width: 300,
+    width: '100%',
+    paddingHorizontal: 16,
   },
 });

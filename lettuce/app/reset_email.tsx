@@ -58,7 +58,7 @@ export default function ResetEmail() {
               onChangeText={setEmail}
             />
             <Text style={styles.caption}>
-              Enter the email address associated with your account and we'll send you a reset code.
+              Enter the email address associated with your account and we&apos;ll send you a reset code.
             </Text>
           </View>
         </ScrollView>
@@ -119,7 +119,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 16,
     marginTop: 48,
-    width: 361,
+    width: '100%',
+    paddingHorizontal: 16,
   },
   input: {
     backgroundColor: '#fff',
@@ -142,11 +143,12 @@ const styles = StyleSheet.create({
     fontSize: 14,
     lineHeight: 21,
     textAlign: 'center',
-    width: 292,
+    paddingHorizontal: 30,
   },
   footerWrap: {
     gap: 12,
     marginBottom: 24,
-    width: 361,
+    width: '100%',
+    paddingHorizontal: 16,
   },
 });

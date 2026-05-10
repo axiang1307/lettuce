@@ -207,8 +207,8 @@ const styles = StyleSheet.create({
   headerBg: {
     position: 'absolute',
     top: -138,
-    left: -34,
-    width: 468,
+    left: 0,
+    right: 0,
     height: 315,
   },
   scroll: {

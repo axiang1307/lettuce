@@ -123,7 +123,8 @@ const styles = StyleSheet.create({
   },
   contentWrap: {
     marginTop: 64,
-    width: 361,
+    width: '100%',
+    paddingHorizontal: 16,
   },
   headerWrap: {
     alignItems: 'center',
@@ -187,6 +188,7 @@ const styles = StyleSheet.create({
     gap: 12,
     marginBottom: 24,
     marginTop: 16,
-    width: 361,
+    width: '100%',
+    paddingHorizontal: 16,
   },
 });

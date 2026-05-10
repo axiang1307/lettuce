@@ -27,7 +27,11 @@ export default function EventDetailScreen() {
       setFlowMode('detail');
       return;
     }
-    router.replace((from ?? '/(tabs)') as any);
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace((from ?? '/(tabs)') as any);
+    }
   };
 
   if (!event) {

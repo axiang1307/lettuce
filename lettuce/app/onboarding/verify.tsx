@@ -144,6 +144,7 @@ const styles = StyleSheet.create({
   },
   keyboardContainer: {
     flex: 1,
+    width: '100%',
   },
   scrollContent: {
     alignItems: 'center',
@@ -155,7 +156,8 @@ const styles = StyleSheet.create({
   },
   progressWrap: {
     marginTop: 24,
-    width: 300,
+    width: '80%',
+    maxWidth: 320,
   },
   title: {
     color: Colors.light.onboarding.title,
@@ -218,6 +220,7 @@ const styles = StyleSheet.create({
   footerWrap: {
     gap: 12,
     marginBottom: 24,
-    width: 361,
+    width: '100%',
+    paddingHorizontal: 16,
   },
 });

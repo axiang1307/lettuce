@@ -163,12 +163,13 @@ const styles = StyleSheet.create({
     lineHeight: 21,
     marginTop: 12,
     textAlign: 'center',
-    width: 292,
+    paddingHorizontal: 30,
   },
   formWrap: {
     gap: 12,
     marginTop: 40,
-    width: 361,
+    width: '100%',
+    paddingHorizontal: 16,
   },
   input: {
     backgroundColor: '#fff',
@@ -214,6 +215,7 @@ const styles = StyleSheet.create({
   footerWrap: {
     gap: 12,
     marginBottom: 24,
-    width: 361,
+    width: '100%',
+    paddingHorizontal: 16,
   },
 });
