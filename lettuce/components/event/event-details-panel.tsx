@@ -94,7 +94,7 @@ export function EventDetailsPanel({
             onPress={onBack}
             hitSlop={12}
             style={[styles.backBtn, { top: Math.max(insets.top, 12) }]}>
-            <Ionicons name="arrow-back" size={26} color="#ffffff" />
+            <Ionicons name="arrow-back" size={30} color="#131313" />
           </Pressable>
 
           {event.statusLabel ? (
@@ -197,10 +197,8 @@ const styles = StyleSheet.create({
     left: 12,
     width: 40,
     height: 40,
-    borderRadius: 20,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(0,0,0,0.18)',
   },
   statusPill: {
     alignSelf: 'flex-start',

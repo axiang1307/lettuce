@@ -5,7 +5,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ParticipantsProfiles } from '@/components/home/participants-profiles';
-import { HomeFeedEvent } from '@/data/home-feed';
+import type { HomeFeedEvent } from '@/data/home-feed';
 const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October',
   'November', 'December'];
 const dow = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
@@ -44,7 +44,7 @@ type CalendarPanelProps = {
 
 export function CalendarPanel({ event, onBack, onSendToPoll }: CalendarPanelProps) {
     const insets = useSafeAreaInsets();
-    const [week, changeWeek] = useState(0);
+    const [week, setWeek] = useState(0);
     const [selectedId, setSelectedId] = useState<string | undefined>(
         event.calendar.selectedOptionId ?? event.calendar.options[0]?.id,
     );
@@ -57,27 +57,23 @@ export function CalendarPanel({ event, onBack, onSendToPoll }: CalendarPanelProp
     );
 
     const now = new Date();                                                                                           
-    const day_of_month = now.getDate();                                                                               
-    const curr_month = now.getMonth();                                                                                
-    const day_of_week = now.getDay();
-    const day_nums = Array.from({length: 7}, (_, i) => {                                                              
+    const dayOfMonth = now.getDate();                                                                                 
+    const dayOfWeek = now.getDay();
+    const dayNums = Array.from({length: 7}, (_, i) => {                                                              
         const d = new Date(now);
-        d.setDate(day_of_month - day_of_week + i + week * 7);                                                                    
+        d.setDate(dayOfMonth - dayOfWeek + i + week * 7);                                                                    
         return d.getDate();
     });
     const weekStart = new Date(now);                                                                                  
-    weekStart.setDate(day_of_month - day_of_week + week * 7);
-    const new_month = weekStart.getMonth();                                                                           
+    weekStart.setDate(dayOfMonth - dayOfWeek + week * 7);
+    const newMonth = weekStart.getMonth();                                                                           
     const year = weekStart.getFullYear();
 
     
-//poll options
-
-    //the front end stuff
     return (
         //safeareaview instead of view so that the text shows
         <GestureHandlerRootView style = {{ flex: 1 }}>
-            <View style = {styles.safeview}>  
+            <View style = {styles.view}>  
                 <ImageBackground
                 source = {event.imageUrl}
                 style = {[styles.header, { paddingTop: insets.top + 8 }]}
@@ -100,17 +96,17 @@ export function CalendarPanel({ event, onBack, onSendToPoll }: CalendarPanelProp
                         <Text style = {{
                             flex: 147,
                             fontSize: 18, 
-                            fontFamily: 'Montserrat', 
+                            fontFamily: 'Montserrat_600SemiBold', 
                             fontWeight: '600', 
                             lineHeight: 23.40, 
-                            wordWrap: 'break-word'}}
+                            }}
                         >
-                            {`${months[new_month]} ${year}`}
+                            {`${months[newMonth]} ${year}`}
                         </Text>
-                        <Pressable onPress={() => changeWeek(week-1)}>
+                        <Pressable onPress={() => setWeek(week-1)}>
                             <Ionicons name = "chevron-back" size = {28}/>
                         </Pressable>
-                        <Pressable onPress={() => changeWeek(week+1)}>
+                        <Pressable onPress={() => setWeek(week+1)}>
                             <Ionicons name = "chevron-forward" size = {28}/>
                         </Pressable>
                     </View>
@@ -127,15 +123,15 @@ export function CalendarPanel({ event, onBack, onSendToPoll }: CalendarPanelProp
                             justifyContent: 'space-between',
                             alignContent: 'center',
                         }}>
-                            {day_nums.map((day, index) => {
-                                const isToday = week ===0 && index === day_of_week;
+                            {dayNums.map((day, index) => {
+                                const isToday = week ===0 && index === dayOfWeek;
                                 return(
                                 <View key={index} style = {{
                                     flex: 1,
                                     alignItems: 'center',
 
                                 }}>
-                                    <Text style = {{color: '#878787', fontSize: 12, fontFamily: 'DM Sans', fontWeight: '400', lineHeight: 18}}>
+                                    <Text style = {{color: '#878787', fontSize: 12, fontFamily: 'DMSans_400Regular', fontWeight: '400', lineHeight: 18}}>
                                         {dow[index]}
                                     </Text>
                                     <View style = {isToday ? styles.circle: null}>
@@ -155,9 +151,9 @@ export function CalendarPanel({ event, onBack, onSendToPoll }: CalendarPanelProp
                                 {hours.map((hour, index) => (
                                     <View key={index} style={{ flexDirection: 'row' }}>
                                         <View style={[styles.hourbox, { width: timeColW }]}>
-                                            <Text style={{ color: '#878787', fontSize: 12, fontFamily: 'DM Sans', fontWeight: '400', lineHeight: 18 }}>{hour}</Text>
+                                            <Text style={{ color: '#878787', fontSize: 12, fontFamily: 'DMSans_400Regular', fontWeight: '400', lineHeight: 18 }}>{hour}</Text>
                                         </View>
-                                        {day_nums.map((day, i) => (
+                                        {dayNums.map((day, i) => (
                                             <View key={i} style={{
                                                 width: cellW,
                                                 borderLeftWidth: 1,
@@ -216,7 +212,7 @@ export function CalendarPanel({ event, onBack, onSendToPoll }: CalendarPanelProp
                     >
                     <BottomSheetView style = {styles.bottomsheet}>
                         <Text style = {{
-                            fontSize: 28.83, fontFamily: 'Montserrat', fontWeight: '600', lineHeight: 37.48, wordWrap: 'break-word',
+                            fontSize: 28.83, fontFamily: 'Montserrat_600SemiBold', fontWeight: '600', lineHeight: 37.48,
                             color: '#131313'
                         }}>
                             {`Week of ${weekStart.getMonth() + 1}/${weekStart.getDate()}/${weekStart.getFullYear()%100}`}
@@ -234,7 +230,7 @@ export function CalendarPanel({ event, onBack, onSendToPoll }: CalendarPanelProp
                             height: 24
                         }}></View>
                         <View style={styles.optionbox}>
-                            {event.calendar.options.slice(0, 2).map((item) => {
+                            {event.calendar.options.slice(0, 3).map((item) => {
                                 const isSelected = item.id === selectedId;
                                 return (
                                     <Pressable
@@ -242,17 +238,17 @@ export function CalendarPanel({ event, onBack, onSendToPoll }: CalendarPanelProp
                                         onPress={() => setSelectedId(item.id)}
                                         style={[styles.addOption, isSelected && styles.optionSelected]}
                                     >
-                                        <Text style={{ color: 'black', fontSize: 18, fontFamily: 'Montserrat', fontWeight: '600', lineHeight: 20.80, wordWrap: 'break-word', paddingTop: 6 }}>
+                                        <Text style={{ color: 'black', fontSize: 18, fontFamily: 'Montserrat_600SemiBold', fontWeight: '600', lineHeight: 20.80, paddingTop: 6 }}>
                                             {item.label}
                                         </Text>
-                                        <Text style={{ color: 'black', fontSize: 18, fontFamily: 'Montserrat', fontWeight: '600', lineHeight: 20.80, wordWrap: 'break-word', paddingTop: 6 }}>
+                                        <Text style={{ color: 'black', fontSize: 18, fontFamily: 'Montserrat_600SemiBold', fontWeight: '600', lineHeight: 20.80, paddingTop: 6 }}>
                                             {item.timeRange}
                                         </Text>
                                     </Pressable>
                                 );
                             })}
                             <View style={styles.addOption}>
-                                <Text style={{ color: 'black', fontSize: 18, fontFamily: 'Montserrat', fontWeight: '600', lineHeight: 20.80, wordWrap: 'break-word', paddingTop: 6 }}>
+                                <Text style={{ color: 'black', fontSize: 18, fontFamily: 'Montserrat_600SemiBold', fontWeight: '600', lineHeight: 20.80, paddingTop: 6 }}>
                                     Add Option
                                 </Text>
                                 <Pressable style={styles.button}>
@@ -281,7 +277,7 @@ export function CalendarPanel({ event, onBack, onSendToPoll }: CalendarPanelProp
 
                             }}>
                                 <Text style = {{
-                                    fontSize: 14, fontFamily: 'DM Sans', fontWeight: '500', lineHeight: 21, wordWrap: 'break-word', color: '#131313'
+                                    fontSize: 14, fontFamily: 'DMSans_600SemiBold', fontWeight: '500', lineHeight: 21, color: '#131313'
                                 }}>
                                     Send to Poll
                                 </Text>
@@ -295,7 +291,7 @@ export function CalendarPanel({ event, onBack, onSendToPoll }: CalendarPanelProp
 }
 
 const styles = StyleSheet.create({
-    safeview: {
+    view: {
         flex: 1,
         alignItems: 'center',
         justifyContent: 'center',
@@ -324,11 +320,10 @@ const styles = StyleSheet.create({
     },
     title:{
         fontSize: 28.83,
-        fontFamily: 'Montserrat',
+        fontFamily: 'Montserrat_600SemiBold',
         fontWeight: 600,
         lineHeight: 37.48, 
-        wordWrap: 'break-word',
-        paddingBottom: 16,
+                paddingBottom: 16,
     },
     profiles:{
         paddingBottom: 8,
@@ -372,11 +367,10 @@ const styles = StyleSheet.create({
     },
     circledSingle: {
         fontSize: 17, 
-        fontFamily: 'Montserrat', 
+        fontFamily: 'Montserrat_600SemiBold', 
         fontWeight: '600', 
         lineHeight: 23.40, 
-        wordWrap: 'break-word',
-        paddingHorizontal: 9,
+                paddingHorizontal: 9,
         paddingVertical: 4.5,
     },
     bottomsheet: {
