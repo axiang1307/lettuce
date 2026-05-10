@@ -15,9 +15,6 @@ import type { HomeFeedEvent } from '@/data/home-feed';
 
 import { ParticipantsProfiles } from '../home/participants-profiles';
 
-const HERO_HEIGHT = 290;
-const CARD_OVERLAP = 96;
-
 type StatusIconKind = 'confirmed' | 'rejected' | 'none';
 
 type EventDetailsPanelProps = {
@@ -70,7 +67,9 @@ export function EventDetailsPanel({
   onOpenActivity,
 }: EventDetailsPanelProps) {
   const insets = useSafeAreaInsets();
-  const { width: screenWidth } = useWindowDimensions();
+  const { width: screenWidth, height: screenHeight } = useWindowDimensions();
+  const HERO_HEIGHT = screenHeight * 0.34;
+  const CARD_OVERLAP = HERO_HEIGHT * 0.33;
   const totalParticipants =
     event.participants.avatars.length + (event.participants.moreCount ?? 0);
   const visibleAvatars = event.participants.avatars.slice(0, 3);
@@ -88,7 +87,7 @@ export function EventDetailsPanel({
         <ImageBackground
           source={event.imageUrl}
           resizeMode="cover"
-          style={[styles.heroWrap, { width: screenWidth }]}>
+          style={[styles.heroWrap, { width: screenWidth, height: HERO_HEIGHT, paddingBottom: CARD_OVERLAP + 24 }]}>
           <View style={styles.heroOverlay} pointerEvents="none" />
 
           <Pressable
@@ -105,7 +104,7 @@ export function EventDetailsPanel({
           ) : null}
         </ImageBackground>
 
-        <View style={[styles.card, { width: screenWidth }]}>
+        <View style={[styles.card, { width: screenWidth, marginTop: -CARD_OVERLAP }]}>
           <View style={styles.headerSection}>
             <View style={styles.headerRow}>
               <Text style={styles.heading} numberOfLines={2}>
@@ -186,14 +185,12 @@ const styles = StyleSheet.create({
     paddingBottom: 0,
   },
   heroWrap: {
-    height: HERO_HEIGHT,
     justifyContent: 'flex-end',
     paddingHorizontal: 24,
-    paddingBottom: CARD_OVERLAP + 24,
   },
   heroOverlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.18)',
+    backgroundColor: 'rgba(0,0,0,0.3)',
   },
   backBtn: {
     position: 'absolute',
@@ -227,7 +224,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingVertical: 32,
     gap: 24,
-    marginTop: -CARD_OVERLAP,
   },
   headerSection: {
     gap: 16,

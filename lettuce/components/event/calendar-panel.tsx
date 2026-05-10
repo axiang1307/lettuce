@@ -14,7 +14,7 @@ const hours = ['8 AM', '9 AM', '10 AM', '11 AM', '12 PM',
                 '6 PM', '7 PM', '8 PM', '9 PM', '10 PM',
 ];
 const ROW_H = 59;
-const CELL_W = 48.3;
+const TIME_COL_RATIO = 64 / 402;
 
 function parseBlock(label: string, timeRange: string) {
   const dayMap: Record<string, number> = {
@@ -48,25 +48,27 @@ export function CalendarPanel({ event, onBack, onSendToPoll }: CalendarPanelProp
     const [selectedId, setSelectedId] = useState<string | undefined>(
         event.calendar.selectedOptionId ?? event.calendar.options[0]?.id,
     );
-    const [hourboxWidth, setHourboxWidth] = useState(0);
+    const [gridWidth, setGridWidth] = useState(0);
+    const timeColW = gridWidth * TIME_COL_RATIO;
+    const cellW = (gridWidth - timeColW) / 7;
     const blocks = useMemo(
         () => event.calendar.options.map((o) => ({ ...o, ...parseBlock(o.label, o.timeRange) })),
         [event.calendar.options],
     );
 
     const now = new Date();                                                                                           
-const day_of_month = now.getDate();                                                                               
-const curr_month = now.getMonth();                                                                                
-const day_of_week = now.getDay();
-const day_nums = Array.from({length: 7}, (_, i) => {                                                              
-    const d = new Date(now);
-    d.setDate(day_of_month - day_of_week + i + week * 7);                                                                    
-    return d.getDate();
-});
-const weekStart = new Date(now);                                                                                  
-weekStart.setDate(day_of_month - day_of_week + week * 7);
-const new_month = weekStart.getMonth();                                                                           
-const year = weekStart.getFullYear();
+    const day_of_month = now.getDate();                                                                               
+    const curr_month = now.getMonth();                                                                                
+    const day_of_week = now.getDay();
+    const day_nums = Array.from({length: 7}, (_, i) => {                                                              
+        const d = new Date(now);
+        d.setDate(day_of_month - day_of_week + i + week * 7);                                                                    
+        return d.getDate();
+    });
+    const weekStart = new Date(now);                                                                                  
+    weekStart.setDate(day_of_month - day_of_week + week * 7);
+    const new_month = weekStart.getMonth();                                                                           
+    const year = weekStart.getFullYear();
 
     
 //poll options
@@ -93,7 +95,7 @@ const year = weekStart.getFullYear();
                         <ParticipantsProfiles avatars={event.participants.avatars} moreCount={event.participants.moreCount ?? 0}/>
                     </View>
                 </ImageBackground>
-                <View style = {styles.calendar}>
+                <View style = {styles.calendar} onLayout={(e) => setGridWidth(e.nativeEvent.layout.width)}>
                     <View style = {styles.monthHeader}>
                         <Text style = {{
                             flex: 147,
@@ -114,11 +116,11 @@ const year = weekStart.getFullYear();
                     </View>
                     <View style = {styles.dateHeader}>
                         <View style = {{
-                            flex: 64,
+                            width: timeColW,
                             backgroundColor: '#ffffff'
                         }}/>
                         <View style = {{
-                            flex: 338,
+                            flex: 1,
                             flexDirection: 'row',
                             paddingTop: 8,
                             paddingRight: 8,
@@ -129,24 +131,22 @@ const year = weekStart.getFullYear();
                                 const isToday = week ===0 && index === day_of_week;
                                 return(
                                 <View key={index} style = {{
-                                    width: 40,
+                                    flex: 1,
                                     alignItems: 'center',
 
-                                }}>                                                                                       
-                                    <Text style = {{color: '#878787', fontSize: 12, fontFamily: 'DM Sans', fontWeight: '400', lineHeight: 18, wordWrap: 'break-word',
-                                    // paddingHorizontal: 8
-                                    }}>
+                                }}>
+                                    <Text style = {{color: '#878787', fontSize: 12, fontFamily: 'DM Sans', fontWeight: '400', lineHeight: 18}}>
                                         {dow[index]}
                                     </Text>
                                     <View style = {isToday ? styles.circle: null}>
                                     <Text style = {styles.circledSingle}
                                     >
                                     {day}
-                                    </Text>    
-                                    </View>                                                                                
+                                    </Text>
+                                    </View>
                                 </View>
                                 );
-                            })}       
+                            })}
                         </View>
                     </View>
                     <View style = {styles.times}>
@@ -154,15 +154,12 @@ const year = weekStart.getFullYear();
                             <View style={{ position: 'relative' }}>
                                 {hours.map((hour, index) => (
                                     <View key={index} style={{ flexDirection: 'row' }}>
-                                        <View
-                                            style={styles.hourbox}
-                                            onLayout={index === 0 ? (e) => setHourboxWidth(e.nativeEvent.layout.width) : undefined}
-                                        >
-                                            <Text style={{ color: '#878787', fontSize: 12, fontFamily: 'DM Sans', fontWeight: '400', lineHeight: 18, wordWrap: 'break-word' }}>{hour}</Text>
+                                        <View style={[styles.hourbox, { width: timeColW }]}>
+                                            <Text style={{ color: '#878787', fontSize: 12, fontFamily: 'DM Sans', fontWeight: '400', lineHeight: 18 }}>{hour}</Text>
                                         </View>
                                         {day_nums.map((day, i) => (
                                             <View key={i} style={{
-                                                width: CELL_W,
+                                                width: cellW,
                                                 borderLeftWidth: 1,
                                                 borderLeftColor: '#dbdbdb',
                                                 borderBottomWidth: 1,
@@ -171,7 +168,7 @@ const year = weekStart.getFullYear();
                                         ))}
                                     </View>
                                 ))}
-                                {hourboxWidth > 0 && blocks.map((b) =>
+                                {gridWidth > 0 && blocks.map((b) =>
                                     b.col >= 0 && b.height > 0 ? (
                                         <Pressable
                                             key={b.id}
@@ -181,8 +178,8 @@ const year = weekStart.getFullYear();
                                                 {
                                                     top: b.top,
                                                     height: b.height,
-                                                    left: hourboxWidth + b.col * CELL_W,
-                                                    width: CELL_W,
+                                                    left: timeColW + b.col * cellW,
+                                                    width: cellW,
                                                 },
                                                 b.id === selectedId && styles.blockSelected,
                                             ]}
@@ -366,12 +363,10 @@ const styles = StyleSheet.create({
       borderRadius: 50,       
     },     
     hourbox: {
-        flex: 64,
         height: 59,
         paddingTop: 9,
         paddingLeft: 8,
         paddingBottom: 32,
-        width: '100%',
         borderBottomWidth: 1,
         borderBottomColor: '#dbdbdb',
     },
@@ -446,22 +441,22 @@ const styles = StyleSheet.create({
         borderColor: '#6096c3',
     },
     bigButton: {
-        width: 48,                                                                                             
-        height: 48,                                                                                              
+        width: 48,
+        height: 48,
         borderRadius: 32,
-        borderWidth: 1.5,                                                                                          
-        borderColor: '#6096c3',                                                                                
-        backgroundColor: '#D2E1ED',                                                                              
-        alignItems: 'center',                                                                                    
+        borderWidth: 1.5,
+        borderColor: '#6096c3',
+        backgroundColor: '#D2E1ED',
+        alignItems: 'center',
         justifyContent: 'center',
-        shadowColor: '#000',                                                                                       
+        shadowColor: '#000',
         shadowOpacity: 0.15,
-        shadowRadius: 2,                                                                                           
-        shadowOffset: { width: 0, height: 2 },                                                                     
-        elevation: 2,  
+        shadowRadius: 2,
+        shadowOffset: { width: 0, height: 2 },
+        elevation: 2,
         position: 'absolute',
         bottom: 35,
-        left: 130
+        left: 125,
     }
 
 })
