@@ -100,8 +100,8 @@ export default function ProfileTab() {
   const insets = useSafeAreaInsets();
   const openEvent = (eventId: string, mode?: 'detail' | 'calendar' | 'poll' | 'activity') => {
     router.push({
-      pathname: '/event/[eventId]',
-      params: { eventId, ...(mode ? { mode } : {}) },
+      pathname: '/(tabs)/event/[eventId]',
+      params: { eventId, from: '/(tabs)/profile', ...(mode ? { mode } : {}) },
     } as Href);
   };
 
@@ -207,8 +207,8 @@ const styles = StyleSheet.create({
   headerBg: {
     position: 'absolute',
     top: -138,
-    left: -34,
-    width: 468,
+    left: 0,
+    right: 0,
     height: 315,
   },
   scroll: {

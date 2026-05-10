@@ -31,8 +31,8 @@ export function HomePage() {
 
   const openEvent = (event: HomeFeedEvent) => {
     router.push({
-      pathname: '/event/[eventId]',
-      params: { eventId: event.id },
+      pathname: '/(tabs)/event/[eventId]',
+      params: { eventId: event.id, from: '/(tabs)' },
     } as Href);
   };
 

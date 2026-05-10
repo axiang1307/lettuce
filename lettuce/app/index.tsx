@@ -15,6 +15,8 @@ const SKIP_ONBOARDING_AND_LOGIN = false;
 export default function Index() {
   const { session, loading } = useAuth();
 
+
+
   if (loading) {
     return (
       <View style={styles.loadingContainer}>

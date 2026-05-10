@@ -29,7 +29,7 @@ export function PollPanel({ event, onSendToCalendar }: PollPanelProps) {
     () => event.poll.completedOptions.reduce((sum, option) => sum + option.votes, 0),
     [event.poll.completedOptions],
   );
-  const showPending = event.poll.visualState === 'pending';
+  const showPending = event.poll.visualState !== 'results';
 
   return (
     <View style={styles.wrap}>
