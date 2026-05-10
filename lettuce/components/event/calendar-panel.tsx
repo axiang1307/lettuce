@@ -230,7 +230,7 @@ export function CalendarPanel({ event, onBack, onSendToPoll }: CalendarPanelProp
                             height: 24
                         }}></View>
                         <View style={styles.optionbox}>
-                            {event.calendar.options.slice(0, 3).map((item) => {
+                            {event.calendar.options.slice(0, 2).map((item) => {
                                 const isSelected = item.id === selectedId;
                                 return (
                                     <Pressable
