@@ -1,31 +1,30 @@
-import { supabase } from '../lib/supabase';
-import { NextFunction, Request, Response } from 'express';
+import { supabase } from '../lib/supabase';//import supabase client
+import { Response, Request, NextFunction } from 'express';
 
-
-export async function authMiddleware(req: Request, res: Response, next: NextFunction) {
-    const authHeader = req.headers.authorization;//the header with bearer jwt
-    if(!authHeader || !authHeader.startsWith('Bearer ')){//verifies the header is good, do this before to not waste network call
-        return res.status(401).json(//bad auth header
+//arrow function verson, remember everything is handed to express, it fills the params in
+export const authMiddleware = async(req: Request, res: Response, next: NextFunction) => {
+    //express has now called this function and filled in the request, we need to fill in the response that it has passed to us now
+    //the request will come in with a jwt from getsession
+    const header = req.headers.authorization;//get the bearer header
+    if(!header || !header.startsWith("Bearer ")){
+        return res.status(401).json(//401 code for failed auth
             {
-                error: 'Missing or malformed Authorization header'
+                error: "Bad Authorization Header"
             }
-        );
+        )
     }
 
-    const token = authHeader.split(' ')[1];//splits the header at the space, [1] returns the second half
-
-    const { data, error} = await supabase.auth.getUser(token);
-
-    if(error || !data.user){//if an error was thrown or this user does not exist
-        return res.status(401).json(
+    const jwt = header.split(' ')[1];//split on the space, get the second jwt half
+    const { data, error } = await supabase.auth.getUser(jwt);//call supabase on this jwt
+    if (error || !data.user){//verify
+        return res.status(401).json(//401 code for failed auth
             {
-                error: 'Invalid or expired token'
+                error: "Bad Authorization Token"
             }
-        );
-
+        )
     }
-
-    req.user = data.user;
+    //at this point jwt has been verified
+    req.user = data.user;//data.user is from supabase.getuser with the jwt, not from the getsession call in frontend
     next();
 
-}
+} 

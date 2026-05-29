@@ -1,9 +1,10 @@
 import { Router } from 'express';
+import {getMe, patchMe} from '../controllers/profiles';
 
 const profilesRouter = Router();
 
-profilesRouter.get('/', (req, res) => {
-  res.send('Hello World');
-});
+profilesRouter.get('/me', getMe);
+
+profilesRouter.patch('/me', patchMe);
 
 export default profilesRouter;
