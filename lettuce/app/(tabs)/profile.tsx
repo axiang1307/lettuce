@@ -1,9 +1,10 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { Href, useRouter } from 'expo-router';
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { profilesRepo, type Profile } from '@/lib/repositories/profiles';
 
 import { HomeLogo } from '@/components/home/home-logo';
 
@@ -105,6 +106,17 @@ export default function ProfileTab() {
     } as Href);
   };
 
+  const [profile, setProfile] = useState<Profile | null>(null);
+
+  useEffect(() => {   
+    profilesRepo.getMe()
+      .then(setProfile)
+      .catch(() => {}); // silently fail — greeting just won't show
+  }, []);
+
+  const name = profile?.full_name;
+  const username = profile?.username;
+
   return (
     <View style={styles.screen}>
       <Image source={IMG.headerBg} style={styles.headerBg} contentFit="cover" />
@@ -121,8 +133,8 @@ export default function ProfileTab() {
           <View style={styles.profileAvatarWrap}>
             <Image source={IMG.me} style={styles.profileAvatar} contentFit="cover" />
           </View>
-          <Text style={styles.name}>Joy Huang</Text>
-          <Text style={styles.handle}>@joyash</Text>
+          <Text style={styles.name}>{name}</Text>
+          <Text style={styles.handle}>{username}</Text>
           <View style={styles.statsRow}>
             <Stat value="5" label="Friends" />
             <Stat value="2" label="Groups" />
