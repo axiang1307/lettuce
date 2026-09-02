@@ -1,18 +1,7 @@
+import type { Profile, ProfileUpdate } from "@lettuce/api-types";
 import { authendFetch } from "../api";
 
-export type Profile = {
-    id: string,
-    username: string | null,
-    full_name: string | null,
-    avatar_url: string | null,
-    created_at: string
-}
-
-export type ProfileUpdate = {
-    username?: string | null,
-    full_name?: string | null,
-    avatar_url?: string | null
-}
+export type { Profile, ProfileUpdate };
 
 export const profilesRepo = {
     getMe: async(): Promise<Profile> => {
@@ -27,5 +16,3 @@ export const profilesRepo = {
         return profile as Profile;
     },
 }
-
-

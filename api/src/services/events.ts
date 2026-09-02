@@ -1,4 +1,4 @@
-import { Event } from '../types/index';
+import type { Event } from '@lettuce/api-types';
 import { getEvents as dbGetEvents } from '../db/events';
 
 export const getEvents = async(userId: string): Promise<Event[] | null> => {

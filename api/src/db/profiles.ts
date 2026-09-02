@@ -1,5 +1,5 @@
 import pool from '../lib/db';
-import { Profile, ProfileUpdate } from '../types/index';
+import type { Profile, ProfileUpdate } from '@lettuce/api-types';
 export const getMe = async(userId: string): Promise<Profile | null> => {
     const result = await pool.query(
         'SELECT * FROM profiles WHERE id = $1', [userId]

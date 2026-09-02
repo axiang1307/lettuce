@@ -1,4 +1,4 @@
-import { Profile, ProfileUpdate } from '../types/index';
+import type { Profile, ProfileUpdate } from '@lettuce/api-types';
 import { getMe as dbGetMe, patchMe as dbPatchMe } from '../db/profiles';
 
 export const getMe = async (userId : string): Promise<Profile | null> => {

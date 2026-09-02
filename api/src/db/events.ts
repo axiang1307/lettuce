@@ -1,5 +1,5 @@
 import pool from '../lib/db';
-import { Event } from '../types/index';
+import type { Event } from '@lettuce/api-types';
 
 export const getEvents = async(userId: string): Promise<Event[]> => {
     const participantResult = await pool.query(

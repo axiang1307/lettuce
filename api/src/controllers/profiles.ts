@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { getMe as serviceGetMe, patchMe as servicePatchMe } from '../services/profiles';
-import { ProfileUpdate } from '../types/index';
+import type { ProfileUpdate } from '@lettuce/api-types';
 
 export const getMe = async (req: Request, res: Response) => {//get function for profile
     if (!req.user) {

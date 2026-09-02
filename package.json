@@ -1,0 +1,9 @@
+{
+  "name": "lettuce-monorepo",
+  "private": true,
+  "workspaces": [
+    "frontend",
+    "api",
+    "packages/*"
+  ]
+}

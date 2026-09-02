@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { getEvents as serviceGetEvents} from '../services/events';
-import { Event } from '../types/index';
+import type { Event } from '@lettuce/api-types';
 
 export const getEvents = async (req: Request, res: Response) => {//get function for profile
     if (!req.user) {
