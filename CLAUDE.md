@@ -36,6 +36,8 @@ cd frontend && npm start           # Expo dev server
 
 `frontend/.env` needs `EXPO_PUBLIC_API_URL` pointed at the running API (e.g. `http://localhost:3000`) for repository-backed calls to work.
 
-## Known issue
+## Typechecking
 
-`npx tsc --noEmit` inside `frontend/` reports ~890 pre-existing errors (`'View' cannot be used as a JSX component`, `expo-router has no exported member 'useRouter'`) — a React/expo-router typings problem in the frontend's environment that predates the monorepo and that Metro never surfaces. Not caused by, and not fixed by, the workspace setup.
+`npx tsc --noEmit` inside `frontend/` and `api/` should both pass clean; Metro doesn't typecheck, so run it explicitly after changes.
+
+If the frontend suddenly reports hundreds of errors like `'View' cannot be used as a JSX component` or `Module "expo-router" has no exported member 'useRouter'`, the cause is almost certainly a damaged `frontend/node_modules`, not the code: an editor's "update imports on file move" refactor (triggered by renaming/moving the app folder while it's open in VS Code/Cursor) can rewrite the relative imports inside `node_modules/**/*.d.ts` to nonexistent paths like `expo-router/src/...`. Fix: `rm -rf frontend/node_modules && npm install` from the root. Rename folders with the editor closed, or decline the "update imports" prompt.
