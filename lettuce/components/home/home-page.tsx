@@ -1,7 +1,8 @@
 import { Href, useRouter } from 'expo-router';
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { profilesRepo, type Profile } from '@/lib/repositories/profiles';
 
 import { Colors } from '@/constants/theme';
 import { filterHomeEventsByQuery, HOME_FEED_EVENTS, type HomeFeedEvent } from '@/data/home-feed';
@@ -36,6 +37,16 @@ export function HomePage() {
     } as Href);
   };
 
+  const [profile, setProfile] = useState<Profile | null>(null);
+
+  useEffect(() => {   
+    profilesRepo.getMe()
+      .then(setProfile)
+      .catch(() => {}); // silently fail — greeting just won't show
+  }, []);
+
+  const firstName = profile?.full_name?.split(' ')[0] ?? 'there';
+
   return (
     <ScrollView
       style={styles.screen}
@@ -46,7 +57,7 @@ export function HomePage() {
       </View>
 
       <View style={styles.header}>
-        <Text style={styles.greeting}>Hi, Joy!</Text>
+      <Text style={styles.greeting}>Hi, {firstName}!</Text>
         <SearchBar value={searchQuery} onChangeText={setSearchQuery} placeholder="Search" />
       </View>
 
