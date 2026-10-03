@@ -2,20 +2,6 @@
 
 The only place for in-progress work, to-dos and open questions. When an item is done, delete it, and record any lasting knowledge in the relevant `brain/` file (and in `decisions.md` if a decision was made).
 
-## In progress
-
-- [ ] **Expo SDK 54 → 57 upgrade** (uncommitted on `dev`).
-  - Already changed:
-    - RN 0.81 → 0.86, React 19.1 → 19.2
-    - navigation imports moved to `expo-router`
-    - `newArchEnabled` and `edgeToEdgeEnabled` removed from `app.json`
-    - `useColorScheme` maps `'unspecified'` → `'light'`
-    - `ios` and `android` scripts switched to `expo run:*`
-    - `lib/api.ts` rewrites `localhost` to Metro's host
-  - Remaining:
-    - [ ] verify on a device
-    - [ ] commit
-
 ## API
 
 - [ ] **Confirm the `auth.users → profiles` signup trigger exists in Supabase** and backfill existing users.

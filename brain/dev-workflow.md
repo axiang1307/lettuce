@@ -20,6 +20,21 @@ cd frontend && npm run lint        # ESLint
 
 `frontend/.env` must point `EXPO_PUBLIC_API_URL` at the running API. In dev, `localhost` is rewritten to Metro's host automatically, so the same value works on a physical device.
 
+## Running on a physical iPhone
+
+- Start Metro from `frontend/` (where `app.json` lives), not the repo root.
+- Expo Go (App Store) supports only **one** SDK at a time, usually the newest. If the project's SDK (57) differs from Expo Go's, the app won't open in Expo Go. Use a development build instead: plug the phone in and run `npx expo run:ios --device`.
+- If a session doesn't appear in Expo Go's list, scan the QR code or enter `exp://<mac-ip>:8081` manually. That separates a discovery problem from a connection problem.
+- Campus Wi-Fi works for LAN connections. `npx expo start --tunnel` is the fallback if the phone can't reach the Mac, but it tunnels only Metro, not the local API on `:3000`.
+
+## Supabase project pausing
+
+The Supabase project is on the free tier and is **paused after about a week with no activity**. While paused, its hostname `<ref>.supabase.co` returns `NXDOMAIN`, so it stops existing in DNS. This shows up as:
+- login failing with "A server with the specified hostname could not be found"
+- the API failing token verification and database queries
+
+To check: `dig +short <ref>.supabase.co` returns nothing. To fix: open the Supabase dashboard and click **Restore project**. The URL, keys and data come back unchanged; no `.env` changes are needed.
+
 ## Typecheck
 
 Metro doesn't typecheck, so run this after changes:
