@@ -400,10 +400,10 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   prevImage: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
   },
   prevImageShade: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     backgroundColor: 'rgba(0,0,0,0.25)',
   },
   statusPill: {

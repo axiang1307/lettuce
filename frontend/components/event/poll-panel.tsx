@@ -171,7 +171,7 @@ const styles = StyleSheet.create({
     borderColor: '#9cad50',
   },
   resultFill: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     width: '0%',
     backgroundColor: '#cecece',
   },

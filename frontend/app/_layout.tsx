@@ -1,7 +1,6 @@
 import { DMSans_400Regular, DMSans_600SemiBold, useFonts as useDmSansFonts } from '@expo-google-fonts/dm-sans';
 import { Montserrat_600SemiBold, useFonts as useMontserratFonts } from '@expo-google-fonts/montserrat';
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { Stack } from 'expo-router';
+import { DarkTheme, DefaultTheme, Stack, ThemeProvider } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
