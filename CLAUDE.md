@@ -2,32 +2,51 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## Repo layout
+## What this is
 
-Monorepo (`axiang1307/lettuce`) holding two apps that share one Supabase project. It was formed by merging two formerly separate repos (`eugenexu0/lettuce` and `axiang1307/lettuce_api`) with their histories rewritten into subdirectories, so `git log` on either subtree goes back to each app's original commits.
+**Lettuce** is a mobile social scheduling app. Users form groups with friends, create events inside them, and use polls to pick a time and an activity. The goal is to take the coordination effort out of making plans.
 
-- `lettuce/` — the Expo/React Native mobile app (frontend). Has its own `CLAUDE.md`, `package.json`, and `.gitignore`.
-- `lettuce_api/` — an Express/TypeScript API being built to replace Supabase's auto-generated PostgREST layer. Has its own `CLAUDE.md`, `package.json`, and `.gitignore`.
-- `supabase/` — local Supabase CLI link metadata (`.temp/`, gitignored) for the shared backend project (Postgres, Auth).
+The repo is an npm-workspaces monorepo:
+- `frontend/`: Expo / React Native app
+- `api/`: Express / TypeScript REST API
+- `packages/api-types/`: shared, type-only package
 
-There is no root `package.json` / npm workspaces yet — each app installs and runs independently from its own directory. Types are still duplicated between `lettuce/lib/repositories/*` and `lettuce_api/src/types/index.ts`; sharing them via a workspace package is the intended follow-up now that they live in one repo.
+All three use one Supabase project.
 
-**Always read the CLAUDE.md inside `lettuce/` or `lettuce_api/` before working in that subtree** — it has the authoritative, up-to-date detail for that codebase. This file only covers how the two pieces fit together.
+## Goals
 
-## How the pieces connect
+- **The API is a learning project.** It exists so the developer can learn REST API design by replacing *part* of Supabase's auto-generated PostgREST layer with hand-written routes. It does not replace Supabase wholesale:
+  - Supabase Auth stays.
+  - Resources move to the API one at a time, when it's worth it.
+  - Leftover direct-Supabase usage is not a defect in itself.
+- **The app is a real product in progress.** Replace mock data with real data in end-to-end vertical slices while keeping the current UX.
 
-- `lettuce` (frontend) authenticates directly against Supabase Auth (`lettuce/lib/supabase.ts`, anon key) and stores the session client-side.
-- For app data, the frontend is being migrated off direct `supabase.from(...)` calls and onto `lettuce_api`: `lettuce/lib/api.ts` (`authendFetch`) attaches the Supabase session's `access_token` as a `Bearer` header and calls `EXPO_PUBLIC_API_URL`; `lettuce/lib/repositories/*` wrap individual resources (e.g. `profilesRepo.getMe()`) on top of that fetch helper.
-- `lettuce_api` verifies that bearer token against Supabase (`supabase.auth.getUser(jwt)` in `src/middleware/auth.ts`) to get the authoritative user, then talks to Postgres **directly via `pg`** (`src/lib/db.ts`, `DATABASE_URL`) rather than through supabase-js/PostgREST — ownership/access checks are therefore enforced in application code (e.g. `WHERE id = $1` keyed off `req.user.id`), not RLS, for anything the API touches.
-- Migration is resource-by-resource: `profiles` is wired end-to-end (repo → API → db). Other resources (`events`, `groups`, `polls`) still exist only as Supabase tables the frontend would otherwise hit directly, and `lettuce_api`'s `events` route is an in-progress stub (see `lettuce_api/CLAUDE.md`).
+## Working norms
 
-## Running both sides locally
+- **In `api/`:** explain the concepts and reasoning behind a change (why this status code, why this layer, the trade-offs, the standard REST convention). Make edits directly when asked to fix or implement something.
+- Run `npx tsc --noEmit` in `frontend/` and `api/` after changes. Metro doesn't typecheck.
+- Always `npm install` from the repo root.
 
-There's no root-level script — start each independently:
+## The brain
 
-```bash
-cd lettuce_api && npm run dev     # Express API on :3000
-cd lettuce && npm start           # Expo dev server
-```
+`brain/` holds the project knowledge that persists across sessions. Read the relevant files before working in an area.
 
-`lettuce/.env` needs `EXPO_PUBLIC_API_URL` pointed at the running API (e.g. `http://localhost:3000`) for repository-backed calls to work.
+| File | Contents |
+|---|---|
+| `brain/product.md` | what Lettuce is, entities, non-goals, product source of truth |
+| `brain/architecture.md` | how the pieces connect, auth and data flow, shared types, resource migration status |
+| `brain/api.md` | API pipeline, layering, identity and access rules, endpoints, error contract, env |
+| `brain/frontend.md` | routing, event flow, data and repository layer, theme, guardrails, env |
+| `brain/dev-workflow.md` | install, run, typecheck, iOS/CNG, EAS, known breakages |
+| `brain/decisions.md` | settled decisions and their rationale |
+| `brain/action-items.md` | **the only place** for in-progress work, to-dos and open questions |
+
+Keeping it up to date:
+- **Information files only state how things are.** No to-dos, "in progress" or "TODO" notes; those go in `action-items.md`.
+- **When something changes**, update the file that describes it in the same change, and add or replace an entry in `decisions.md` if a decision was made.
+- **When an action item is finished**, delete it and move any lasting knowledge into the right info file.
+- **Don't duplicate.** Each fact lives in one file; other files link to it.
+- **Per-app `CLAUDE.md` files are retired.** Add new knowledge to `brain/`.
+
+@brain/architecture.md
+@brain/action-items.md
