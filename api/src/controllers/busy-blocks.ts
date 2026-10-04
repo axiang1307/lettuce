@@ -6,6 +6,25 @@ import {
     deleteBusyBlock as serviceDeleteBusyBlock,
 } from '../services/busy-blocks';
 import type { BusyBlockCreate, BusyBlockUpdate } from '@lettuce/api-types';
+import { ForbiddenError, NotFoundError, ValidationError } from '../lib/errors';
+
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+// Maps what a PATCH or DELETE can throw to a response. CHECK violations (23514) mean the merged block broke
+// a rule the service missed, so they're the client's fault (400), not the server's.
+const sendBlockError = (res: Response, error: any) => {
+    if (error instanceof NotFoundError) {
+        return res.status(404).json({ error: error.message });
+    }
+    if (error instanceof ForbiddenError) {
+        return res.status(403).json({ error: error.message });
+    }
+    if (error instanceof ValidationError || error?.code === '23514') {
+        return res.status(400).json({ error: error instanceof ValidationError ? error.message : 'Busy block breaks a time or date rule' });
+    }
+    console.log(error);
+    return res.status(500).json({ error: 'Internal Server Error' });
+};
 
 // A real calendar date written as YYYY-MM-DD. The shape check alone would let 2026-02-30 through;
 // JS Date rolls that over to March 2, so converting back and comparing catches dates that don't exist.
@@ -151,15 +170,97 @@ export const postBusyBlock = async (req: Request, res: Response) => {
 }
 
 // PATCH /busy-blocks/:id  body: BusyBlockUpdate
-// Edits one of the caller's blocks. 200 with the updated block.
+// Edits one of the caller's manual blocks. 200 with the updated block.
+// This checks each sent field on its own; rules that compare two fields (end after start, end_date only on
+// weekly blocks) need the stored row when only one side is sent, so the service checks those.
 export const patchBusyBlock = async (req: Request, res: Response) => {
-    // not implemented yet
-    return res.status(501).json({ error: 'Not implemented' });
+    if (!req.user) {
+        return res.status(401).json({ error: 'Unauthorized User' });
+    }
+    const { id } = req.params;
+    if (typeof id !== 'string' || !UUID.test(id)) {
+        return res.status(400).json({ error: 'id must be a UUID' });
+    }
+    if (!req.body || Object.keys(req.body).length === 0) {
+        return res.status(400).json({ error: 'Request body cannot be empty' });
+    }
+
+    // Build the update from known fields that are present; any other keys are ignored.
+    const changes: BusyBlockUpdate = {};
+
+    if ('start_date' in req.body) {
+        const { start_date } = req.body;
+        if (typeof start_date !== 'string' || !isDate(start_date)) {
+            return res.status(400).json({ error: 'start_date must be a real date in YYYY-MM-DD format' });
+        }
+        changes.start_date = start_date;
+    }
+
+    if ('end_date' in req.body) {
+        const { end_date } = req.body;
+        if (end_date !== null && (typeof end_date !== 'string' || !isDate(end_date))) {
+            return res.status(400).json({ error: 'end_date must be null or a real date in YYYY-MM-DD format' });
+        }
+        changes.end_date = end_date;
+    }
+
+    for (const key of ['start_time', 'end_time'] as const) {
+        if (key in req.body) {
+            const time = toTime(req.body[key]);
+            if (!time) {
+                return res.status(400).json({ error: `${key} must be a 24-hour HH:MM time` });
+            }
+            changes[key] = time;
+        }
+    }
+
+    if ('repeat_days' in req.body) {
+        const { repeat_days } = req.body;
+        if (repeat_days === null) {
+            changes.repeat_days = null;
+        } else if (!Array.isArray(repeat_days) || repeat_days.length === 0
+            || !repeat_days.every((d) => Number.isInteger(d) && d >= 0 && d <= 6)) {
+            return res.status(400).json({ error: 'repeat_days must be null or a non-empty array of weekdays 0-6' });
+        } else {
+            changes.repeat_days = [...new Set<number>(repeat_days)].sort((a, b) => a - b);
+        }
+    }
+
+    if ('timezone' in req.body) {
+        const { timezone } = req.body;
+        if (typeof timezone !== 'string' || !isTimeZone(timezone)) {
+            return res.status(400).json({ error: 'timezone must be an IANA time zone like America/New_York' });
+        }
+        changes.timezone = timezone;
+    }
+
+    if (Object.keys(changes).length === 0) {
+        return res.status(400).json({ error: 'No valid fields to update' });
+    }
+
+    try {
+        const data = await servicePatchBusyBlock(req.user.id, id, changes);
+        return res.status(200).json(data);
+    } catch (error) {
+        return sendBlockError(res, error);
+    }
 }
 
 // DELETE /busy-blocks/:id
-// Removes one of the caller's blocks.
+// Removes one of the caller's manual blocks. 204 with no body.
 export const deleteBusyBlock = async (req: Request, res: Response) => {
-    // not implemented yet
-    return res.status(501).json({ error: 'Not implemented' });
+    if (!req.user) {
+        return res.status(401).json({ error: 'Unauthorized User' });
+    }
+    const { id } = req.params;
+    if (typeof id !== 'string' || !UUID.test(id)) {
+        return res.status(400).json({ error: 'id must be a UUID' });
+    }
+
+    try {
+        await serviceDeleteBusyBlock(req.user.id, id);
+        return res.status(204).end();
+    } catch (error) {
+        return sendBlockError(res, error);
+    }
 }
