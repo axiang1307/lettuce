@@ -1,0 +1,63 @@
+# Runs on every pull request, on pushes to main, and on demand from the Actions tab.
+#
+# typecheck: both apps (Metro doesn't typecheck, so this is the only check).
+# api-tests: builds a throwaway Supabase from supabase/migrations in Docker on the runner, then runs
+#            the Postman collection against the API pointed at it (api/scripts/test-local.sh, the same
+#            script as `npm run test:api:local`). The hosted project is never touched, so no secrets.
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# A newer push to the same branch or pull request cancels the run in progress.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  typecheck:
+    name: Typecheck
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: API
+        working-directory: api
+        run: npx tsc --noEmit
+      - name: Frontend
+        working-directory: frontend
+        run: npx tsc --noEmit
+
+  api-tests:
+    name: API tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      # Pinned to the version the migrations and this workflow were verified with.
+      - uses: supabase/setup-cli@v3
+        with:
+          version: 2.119.0
+      # Only what the tests need: the database, Auth, Storage (the avatars migration creates a
+      # bucket) and the gateway in front of them.
+      - name: Start local Supabase from supabase/migrations
+        run: supabase start -x realtime,imgproxy,mailpit,postgrest,postgres-meta,studio,edge-runtime,logflare,vector,supavisor
+      - name: Run the Postman collection
+        working-directory: api
+        run: npm run test:api:local
