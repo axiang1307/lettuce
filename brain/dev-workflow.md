@@ -69,4 +69,20 @@ Run `eas build` from `frontend/`, where `eas.json` lives. EAS CLI detects the wo
 - Type-only package: both apps `import type` it, so nothing loads it at runtime and there's no build step. npm symlinks it into `node_modules`, so edits show up immediately. The frontend never redefines these types; repositories re-export them.
 - `Row` types say timestamps are `string` (the JSON shape); inside the API, `pg` returns `Date` until `res.json()`.
 - Dry-run a migration before applying it: run its SQL plus test inserts inside one `DO` block (one statement, so all or nothing) that ends with `raise exception` carrying a PASS/FAIL report. The error rolls everything back. Each test insert sits in its own `begin … exception` block (a savepoint) and records `constraint_name` from `get stacked diagnostics`, so a test can assert *which* constraint rejected it.
-- Schema change routine: apply a migration (save it as `supabase/migrations/<version Supabase recorded>_<name>.sql`), `npm run gen:types`, typecheck both apps, commit together.
+- Schema change routine: apply a migration (save it as `supabase/migrations/<version Supabase recorded>_<name>.sql`), check that the folder still rebuilds (`supabase db reset`, then `npm run test:api:local`), `npm run gen:types`, typecheck both apps, commit together.
+- Generate types with `npm run gen:types` (linked), not `--local`: the local generator's output is unformatted, adds `graphql_public` and writes `NOT NULL` jsonb as `NonNullable<Json>`.
+
+## Local Supabase
+
+- Needs Docker (Docker Desktop; its CLI lives in `~/.docker/bin`, which must be on `PATH`).
+- `supabase start` (from the repo root) runs Postgres, Auth, Storage and the gateway in Docker and applies `supabase/migrations/` to an empty database; `supabase db reset` rebuilds it; `supabase stop --no-backup` removes it. Settings: `supabase/config.toml` (Postgres 17, like the hosted project).
+- `supabase status` prints the local URLs and keys. They're fixed demo values, not secrets.
+- `supabase db dump --linked` covers only our own schemas: triggers on `auth.users` (`on_auth_user_created`) and Storage buckets and policies need their own migration SQL.
+- The CLI reaches the hosted project through a temporary login role, so `--linked` commands need no database password.
+
+## API tests and CI
+
+- `api/postman/lettuce-api.postman_collection.json` covers every route; Auth's "Sign in" saves the token that the collection's Bearer auth sends. Run it top to bottom: later folders reuse saved ids (Events needs Groups' `group_id`). Give each new route requests for its success case and each testable error row.
+- `npm run test:api` (in `api/`) runs it with Newman against the hosted project. It needs the gitignored `api/postman/lettuce-local.postman_environment.json`, made from the `.example` file with the anon key, test email and password. Each run leaves one group, one event and two busy blocks in production.
+- `npm run test:api:local` (`api/scripts/test-local.sh`) runs it against `supabase start`: a fresh user per run, its own API on `API_PORT` (default 3001, so it runs beside `npm run dev`). It refuses non-local databases and never loads `api/.env`.
+- `.github/workflows/ci.yml` runs on pull requests, pushes to `main` and manual dispatch (a push to a feature branch alone doesn't run it): typecheck both apps; then Supabase CLI 2.119.0 (pinned), `supabase start` with unused services excluded, and `npm run test:api:local`.

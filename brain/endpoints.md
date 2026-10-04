@@ -182,7 +182,7 @@ No transaction: if the block insert fails, an empty manual calendar is still val
 
 ## Trying a route
 
-Get an access token from a signed-in frontend session, then:
+The Postman collection exercises every route (`brain/dev-workflow.md`, API tests and CI); its "Sign in" request also gets you a token. With a token:
 
 ```bash
 curl -H "Authorization: Bearer $TOKEN" http://localhost:3000/profiles/me

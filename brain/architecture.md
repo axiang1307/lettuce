@@ -9,7 +9,8 @@ npm-workspaces monorepo (`axiang1307/lettuce`); everything uses one Supabase pro
 | `frontend/` | Expo / React Native app (`brain/frontend.md`) |
 | `api/` | Express / TypeScript REST API replacing part of PostgREST (`brain/api.md`) |
 | `packages/api-types/` | `@lettuce/api-types`: type-only contract shared by both apps (`brain/dev-workflow.md`) |
-| `supabase/migrations/` | SQL migrations, named by the version Supabase recorded (`supabase/.temp/` is gitignored CLI link data) |
+| `supabase/` | `migrations/` (named by the version Supabase recorded) rebuild the whole schema from a baseline; `config.toml` configures the local stack (`brain/dev-workflow.md`); `.temp/` is gitignored CLI link data |
+| `.github/workflows/ci.yml` | CI: typecheck both apps; API tests against a local Supabase (`brain/dev-workflow.md`) |
 | `brain/` | persistent project knowledge |
 
 ## How the pieces connect

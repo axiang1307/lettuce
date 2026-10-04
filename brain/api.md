@@ -68,3 +68,4 @@ Shared clients are created once at import time: `src/lib/db.ts` (pg `Pool`) and 
 | `SUPABASE_URL` | auth verification client |
 | `SUPABASE_SERVICE_ROLE_KEY` | auth verification client |
 | `DATABASE_URL` | pg pool |
+| `PORT` | optional listen port, default `3000` (the local test runner sets it) |

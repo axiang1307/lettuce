@@ -50,7 +50,7 @@ Settled decisions and why. When one changes, replace its entry.
   - Long-press then drag on the grid draws a block and opens the same form pre-filled. A plain swipe still scrolls.
   - Both stay touch-friendly and handle recurrence, unlike painting cells.
 
-**Blocks belong to a calendar; one shared `busy_blocks` table (2026-10-04, migration `20261004055730_calendars_busy_blocks.sql`).**
+**Blocks belong to a calendar; one shared `busy_blocks` table (2026-10-04).**
 - Tables:
   - `calendars`: `id`, `user_id` → `profiles` (cascade), `source` enum `calendar_source` (`manual` / `google` / `outlook`), unique `(user_id, source)`.
   - `busy_blocks`: `calendar_id` → `calendars` (cascade).
@@ -88,14 +88,29 @@ Settled decisions and why. When one changes, replace its entry.
 - Contract types stay separate from table types because the API's shapes differ from the tables' (system-set columns, server-filled `created_by`, future joined responses).
 
 **Group-first: every event belongs to exactly one group (2026-10-03).**
-- `events.group_id` is `NOT NULL` and references `groups(id)`; the many-to-many `event_groups` table was dropped (migration `20261004013405_events_group_id.sql`).
+- `events.group_id` is `NOT NULL` and references `groups(id)`; the many-to-many `event_groups` table was dropped.
 - One-to-many is modeled as a foreign key on the "many" side. `NOT NULL` lets the database enforce the product rule, and "events in a group" needs no join.
 - `event_participants` stays: group membership is who *could* attend, participants (with `rsvp_status`) are who's on the event.
 
 **Event status is a Postgres enum: `planning` → `upcoming` → `in_progress` → `done` (2026-10-03).**
-- Replaced the original `draft / planning / confirmed / cancelled` CHECK list (migration `20261004010729_event_status_enum.sql`); new events default to `planning`.
+- Replaced the original `draft / planning / confirmed / cancelled` CHECK list; new events default to `planning`.
 - An enum rather than a CHECK constraint so generated types give `EventStatus` as a union. Adding a value is a one-line `alter type … add value`; removing or renaming one needs a migration that rebuilds the type.
 - There is no `cancelled` state for now.
+
+**A baseline migration replaces the untracked early schema (2026-10-04).**
+- `20261004000000_baseline.sql` is `supabase db dump --linked` plus the `on_auth_user_created` trigger, added by hand because it lives on `auth.users` and the dump covers only our own schemas.
+- It absorbed `event_status_enum`, `events_group_id` and `calendars_busy_blocks`, whose end state was already in the dump. Rebuilding the pre-`avatars_bucket` schema by subtracting them by hand was error-prone and bought nothing; their notes are in git history.
+- `avatars_bucket` stays a separate migration because Storage buckets and policies aren't in the dump.
+- The baseline reproduces production as-is, including grants the security advisor flags; fixes go in new migrations. The hosted history was aligned with `supabase migration repair`.
+
+**`date` columns are parsed by one global pg type parser, not per-query casts (2026-10-04).** `types.setTypeParser` in `api/src/lib/db.ts` covers every query and any future `date` column; `::text` casts would have to be remembered in each query.
+
+**API tests are a Postman collection run by Newman (2026-10-04).**
+- Black-box HTTP tests of the real API with real Auth tokens; the status tables in `brain/endpoints.md` are the cases.
+- The repo copy (`api/postman/lettuce-api.postman_collection.json`) is the source of truth, so tests change, branch and get reviewed with the code, and Newman can read it. Postman's cloud copy is a convenience; export edits made in the app back over the file.
+- Newman rather than the Postman CLI: open source, no account, runs the file from the repo.
+
+**CI tests against a throwaway local Supabase, never the hosted project (2026-10-04).** It builds the stack from `supabase/migrations` on the runner. No rows are left in production, CI needs no secrets (local demo keys, a per-run user and password), and the free tier's pausing can't fail builds.
 
 ## Docs
 
