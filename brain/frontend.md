@@ -15,7 +15,7 @@ Expo, React Native, TypeScript, Supabase Auth. File-based routing with Expo Rout
 - `app/index.tsx` checks auth and redirects new users to `/onboarding` and authenticated users to `/(tabs)`.
 - `SKIP_ONBOARDING_AND_LOGIN` is a hardcoded `const` in `app/index.tsx`, not an env var. Set it to `true` to bypass auth during development.
 - Onboarding (`app/onboarding/*`) covers welcome, use-cases, name, phone, verify, credentials and calendar-sync.
-- Top-level routes also include `login`, `settings`, `edit-profile`, `create-event` (opened by a group card's **Plan Event** button), `create-group` (opened by the `+` in the groups header and from create-event's empty state), password reset (`password_reset`, `reset_email`, `verify_pass_reset`), `logging-out` and `modal`.
+- Top-level routes also include `login`, `settings`, `edit-profile`, `create-event` (opened by a group card's **Plan Event** button), `create-group` (opened by the `+` in the groups header and from create-event's empty state), `my-calendar` (opened by the arrow next to the profile tab's "Your Calendar:"; see below), password reset (`password_reset`, `reset_email`, `verify_pass_reset`), `logging-out` and `modal`.
 - The tab shell (`app/(tabs)/_layout.tsx`) has Home, Groups, Notifications and Profile.
 - Event detail lives at `app/(tabs)/event/[eventId].tsx` and is hidden from the tab bar with `href: null`.
 
@@ -33,6 +33,18 @@ Expo, React Native, TypeScript, Supabase Auth. File-based routing with Expo Rout
   - API errors (e.g. the `403` "not a member" message) show inline above the button.
 - create-event accepts a `groupId` param (from **Plan Event**) and preselects that group.
 
+## My calendar (manual busy times)
+
+`app/my-calendar.tsx` is the signed-in user's own week calendar, for entering busy times by hand (see the calendar decision in `brain/decisions.md`). It has a back-arrow bar, `WeekCalendar` and a `+` button, all inside `GestureHandlerRootView` for the sheet.
+
+- **`+`** opens `BusyTimeSheet` (`components/calendar/busy-time-sheet.tsx`), a `@gorhom/bottom-sheet` form. It starts at the next full hour, for one hour:
+  - **One time** or **Repeats weekly**. One time shows a date field (default today). Weekly shows S–S day chips (the starting day preselected) and an optional **Until** date ("No end date" sets one three months out; **Clear** removes it).
+  - **Starts** and **Ends** times use `@react-native-community/datetimepicker`: compact inline pickers on iOS in 15-minute steps, and a pill that opens the dialog on Android.
+  - Errors: end not after start; weekly with no days.
+  - It is controlled by `initial` (`null` closes it) and resets every time it opens. Save hands `BusyTimeValues` to `onSave` (times as minutes after midnight).
+- **Long-press and drag** on the grid draws a block: `WeekCalendar`'s opt-in `onDrawBlock` prop. The drag starts only after a 300 ms hold, so plain swipes still scroll. It snaps to 15 minutes, gives a haptic tap on iOS, and shows a dashed preview. A hold without dragging draws one hour. Releasing opens the same sheet, pre-filled with that date and range, and the drawn block stays on the grid while the sheet is open.
+- **Nothing is saved yet.** With no busy-blocks API, Save just closes the sheet and the grid shows no saved blocks.
+
 ## Home feed and groups tab
 
 - **Home** (`components/home/home-page.tsx`): fetches profile, `eventsRepo.getEvents` and `groupsRepo.getGroups` on focus. Events carry only `group_id`, so group names are looked up from the groups list. `components/home/feed.ts` maps each `Event` to a card:
@@ -47,6 +59,8 @@ Expo, React Native, TypeScript, Supabase Auth. File-based routing with Expo Rout
 ## Event detail flow
 
 `[eventId].tsx` holds a `flowMode` state (`detail` | `calendar` | `poll` | `activity`) and renders the matching panel from `components/event/`, each receiving a full `HomeFeedEvent`.
+
+The week grid (month header with week arrows, a **Today** pill in the corner above the hour column that jumps back to week 0, day row, 8 AM–10 PM hour grid, blocks) is the shared `WeekCalendar` in `components/calendar/week-calendar.tsx`. It's controlled: the parent owns `week` (offset from this week), `selectedId` and the `blocks` (`{ id, day: 0–6, startHour, endHour }`, fractional hours allowed), and sizes it with `style`. `weekStartFor(week)` gives that week's Sunday. `CalendarPanel` wraps it with the hero header, `+` button and bottom sheet, and turns mock options into blocks with `parseBlock`.
 
 - Mock ids (`evt-1`…`evt-4`, linked from the profile tab) load from `data/home-feed.ts`.
 - Any other id is a real event. With no `GET /events/:id` yet, the screen fetches `GET /events/me` and `GET /groups/me` and finds the event by id on the device. It shows a spinner while loading, and "No event found" if the id isn't among the caller's events (which doubles as the access check).

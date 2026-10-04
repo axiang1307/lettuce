@@ -20,9 +20,22 @@
 - [ ] **Notifications:** replace the mock once a table and route exist.
 - [ ] **Device test** (after `npm run ios` for `expo-image-picker`): edit profile (names, `409` username, photo upload/remove); create group → groups tab; Plan Event → create-event preselected → home Upcoming → detail.
 
+## Calendar
+
+- [ ] **Busy-blocks API** (tables exist). Routes `GET /busy-blocks/me?from&to`, `POST`, `PATCH` / `DELETE /busy-blocks/:id`. Questions to settle:
+  - `POST` gets-or-creates the caller's manual calendar (`insert … on conflict (user_id, source) do nothing`).
+  - These are the first `:id` routes, so decide `403` or `404` for someone else's block (scope by joining `calendars.user_id`).
+  - Decide whether the server or the client expands weekly blocks into a date range.
+  - Validate `timezone` as an IANA name.
+- [ ] **Wire My Calendar to it:** add a `busyBlocksRepo`, save from `BusyTimeSheet`, show saved blocks, and tap a block to edit or delete it.
+- [ ] **Device test My Calendar** (rebuild with `npm run ios` for the date-time picker): profile arrow → My Calendar; Today button on both calendars; `+` form (one time / weekly / until / errors); long-press-drag drawing vs. plain scrolling.
+- [ ] Later: the onboarding "Manually Add Calendar" button; computing group overlap; whether drawing should auto-scroll near the grid's edges; the Google / Outlook import (plan in `decisions.md`).
+
 ## Security
 
 - [ ] **Decide RLS per table.** Tables the frontend reads directly need real policies; API-only tables can deny `anon` / `authenticated`.
+- [ ] **Baseline migration.** `supabase/migrations/` starts at `avatars_bucket`; `profiles`, `groups`, `events` and the other early tables were created before migrations were tracked, so the folder can't rebuild the database from scratch (`supabase db reset` fails). Dump the schema into an earlier-dated baseline file and mark it as applied.
+- [ ] **Turn on leaked-password protection** in Supabase Auth (security advisor WARN).
 
 ## Open product questions
 
