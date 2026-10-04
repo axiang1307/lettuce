@@ -34,20 +34,19 @@ All three use one Supabase project.
 | File | Contents |
 |---|---|
 | `brain/product.md` | what Lettuce is, entities, non-goals, product source of truth |
-| `brain/architecture.md` | how the pieces connect, auth and data flow, shared types, resource migration status |
-| `brain/api.md` | API pipeline, layering, identity and access rules, error contract, env |
-| `brain/endpoints.md` | every API route: request, validation, status codes, response shape |
-| `brain/frontend.md` | routing, event flow, data and repository layer, theme, guardrails, env |
-| `brain/dev-workflow.md` | install, run, typecheck, iOS/CNG, EAS, known breakages |
+| `brain/architecture.md` | repo layout, how the pieces connect, resource status |
+| `brain/api.md` | API pipeline, layering, access rules, error contract, env |
+| `brain/endpoints.md` | every route: body, validation, status codes |
+| `brain/frontend.md` | routing, screens and data flow, repositories, theme, guardrails, env |
+| `brain/dev-workflow.md` | install, run, typecheck, native builds, shared types and migrations, gotchas |
 | `brain/decisions.md` | settled decisions and their rationale |
-| `brain/action-items.md` | **the only place** for in-progress work, to-dos and open questions |
+| `brain/action-items.md` | **the only place** for to-dos and open questions |
 
-Keeping it up to date:
-- **Information files only state how things are.** No to-dos, "in progress" or "TODO" notes; those go in `action-items.md`.
-- **When something changes**, update the file that describes it in the same change, and add or replace an entry in `decisions.md` if a decision was made.
-- **When an action item is finished**, delete it and move any lasting knowledge into the right info file.
-- **Don't duplicate.** Each fact lives in one file; other files link to it.
-- **Per-app `CLAUDE.md` files are retired.** Add new knowledge to `brain/`.
+Rules:
+- Info files state how things are; to-dos go only in `action-items.md`. Delete finished items, moving lasting knowledge to an info file.
+- Update the describing file in the same change; record decisions in `decisions.md`.
+- Each fact lives in one file. Edit in place; never append a contradiction.
+- `/update-brain` records a session's lasting knowledge and pushes only that to `main`.
 
 @brain/architecture.md
 @brain/action-items.md

@@ -1,6 +1,6 @@
 # Decisions
 
-A log of settled decisions and why they were made. When a decision changes, edit or replace its entry rather than appending a contradiction.
+Settled decisions and why. When one changes, replace its entry.
 
 ## Backend
 
@@ -29,12 +29,7 @@ A log of settled decisions and why they were made. When a decision changes, edit
 - This is the common production pattern of letting the database guarantee the row.
 - `GET` and `PATCH` can assume the row exists, so `404` is only a defensive case.
 
-**PATCH semantics (resolved 2026-05/09):**
-- Build the update only from allow-listed keys and silently ignore everything else.
-- `null` clears a field; empty strings are rejected for `full_name` and `username`.
-- `username` is trimmed.
-- A missing body or `{}` → `400`.
-- A unique-constraint violation (`23505`) → `409`.
+**Request bodies are allow-listed (2026-05/09).** Controllers build the insert/update from known keys only and silently ignore the rest, so clients can't set `id`, `created_by` and the like. `null` clears a field; blank required strings are `400`. (Per-route rules: `brain/endpoints.md`.)
 
 **Profile pictures live in a public Storage bucket, and `avatar_url` stores the object path (2026-10-03).**
 - Image bytes never go in Postgres or through the API; the frontend uploads straight to Storage.
@@ -43,9 +38,7 @@ A log of settled decisions and why they were made. When a decision changes, edit
 
 **Edit profile keeps a single `full_name` column (2026-10-03).** The form shows first and last name but splits and rejoins `full_name` rather than adding columns, matching how onboarding already writes it.
 
-**Error contract:** every non-2xx response is `{ error: string }`, using the status codes listed in `brain/api.md`.
-
-**Hand-rolled validation for now.** Switching to `zod` is planned once the patterns are understood.
+**Services throw typed errors; controllers map them to statuses (2026-10-03).** e.g. `ForbiddenError` → `403`. Keeps HTTP out of business logic, mirroring how Postgres codes (`23505` → `409`) are mapped in controllers.
 
 ## Monorepo / tooling
 
@@ -65,23 +58,14 @@ A log of settled decisions and why they were made. When a decision changes, edit
 - `events.group_id` is `NOT NULL` and references `groups(id)`; the many-to-many `event_groups` table was dropped (migration `20261004013405_events_group_id.sql`).
 - One-to-many is modeled as a foreign key on the "many" side. `NOT NULL` lets the database enforce the product rule, and "events in a group" needs no join.
 - `event_participants` stays: group membership is who *could* attend, participants (with `rsvp_status`) are who's on the event.
-- What happens to events when a group is deleted is not decided yet. The foreign key has no `ON DELETE` clause, so Postgres defaults to `NO ACTION`: a group that has events can't be deleted.
 
 **Event status is a Postgres enum: `planning` → `upcoming` → `in_progress` → `done` (2026-10-03).**
 - Replaced the original `draft / planning / confirmed / cancelled` CHECK list (migration `20261004010729_event_status_enum.sql`); new events default to `planning`.
 - An enum rather than a CHECK constraint so generated types give `EventStatus` as a union. Adding a value is a one-line `alter type … add value`; removing or renaming one needs a migration that rebuilds the type.
 - There is no `cancelled` state for now.
 
-**One root lockfile; install only from the root.**
-
-**No `metro.config.js`.** Expo SDK 52+ handles monorepo Metro config.
-
-**`frontend/ios` is CNG output, gitignored, and regenerated rather than patched.**
-
-**Navigation imports go through `expo-router`, not `@react-navigation/*`** (part of the Expo SDK 57 upgrade).
-
 ## Docs
 
-**Persistent project knowledge lives in `brain/`; in-progress and to-do items live only in `brain/action-items.md`.**
-- The per-app `CLAUDE.md` files were removed. The root `CLAUDE.md` holds goals and working norms and points into `brain/`.
-- `frontend/AGENTS.md` was removed; its product content now lives in `brain/product.md`. The root `AGENTS.md` only points to `CLAUDE.md`, so non-Claude agents find the same instructions.
+**Project knowledge lives in `brain/`; to-dos only in `brain/action-items.md`.** The root `CLAUDE.md` holds goals and norms and auto-loads only `architecture.md` and `action-items.md` to keep per-session input small; other files are read on demand. `AGENTS.md` points non-Claude agents to `CLAUDE.md`.
+
+**Brain updates go straight to `main`, apart from feature work (2026-10-03).** `/update-brain` (`.claude/skills/update-brain/`) commits only `brain/` and `CLAUDE.md`, cherry-picks that commit onto `origin/main` in a temporary worktree, and pushes it directly (no PR, never force), so knowledge isn't stuck on unmerged branches. Trade-off: `main`'s brain can describe code that's still on a feature branch.

@@ -14,14 +14,11 @@ Users form **groups** with other users. Inside a group they create **events**. E
 - reminders for upcoming plans
 - lightweight activity suggestions
 
-## Intended entities
+## Entities
 
-- v1: `profiles`, `groups`, `group_members`, `events`, `event_attendees`, `notifications`
-- after v1: `polls`, `poll_options`, `poll_votes`, `activity_suggestions`
-
-Tables that exist in Supabase today: `profiles`, `groups`, `group_memberships`, `events` (each in exactly one group, via `events.group_id`), `event_participants`, `polls`, `poll_options`, `poll_votes`.
-
-The MVP flow is **group-first**: events are only created inside a group (see `brain/decisions.md`).
+- Tables today: `profiles`, `groups`, `group_memberships` (`role`: owner / admin / member), `events` (each in exactly one group), `event_participants` (`rsvp_status`), `polls`, `poll_options`, `poll_votes`.
+- Not built yet: `notifications`, `activity_suggestions`.
+- The MVP flow is **group-first**: events are only created inside a group.
 
 ## Non-goals (for now)
 
@@ -51,5 +48,3 @@ These hold whether a table is served by the API, which enforces them in code, or
 - private group and event data is readable only by members
 - attendance rows are writable only by the user they belong to
 - notification rows are readable and updatable only by the target user
-
-The original product brief was `frontend/AGENTS.md`, now removed; see git history. Its product content is summarized here. Its backend guidance ("Supabase-first", "service-role work goes in Edge Functions") predates the custom API and is superseded by `brain/decisions.md`.

@@ -1,6 +1,6 @@
 # API endpoints
 
-This is the reference for every route the API (`api/`) serves. For the pipeline, layering, access rules and the error contract behind these routes, see `brain/api.md`.
+Every route the API serves. Pipeline, layering, access rules and the error contract: `brain/api.md`.
 
 ## Basics
 
@@ -8,7 +8,8 @@ This is the reference for every route the API (`api/`) serves. For the pipeline,
 - **Auth:** every route requires `Authorization: Bearer <supabase access_token>`. `authMiddleware` is global, so there are no public routes (not even a health check). A missing, malformed or invalid token → `401`.
 - **Identity:** the caller is always `req.user.id`, taken from the verified token. No route takes a user id in the URL or body.
 - **Bodies:** JSON in and out. Errors are always `{ "error": string }`.
-- **Types:** response shapes are the shared types in `@lettuce/api-types` (`packages/api-types/index.ts`).
+- **Types:** request and response shapes are the shared types in `packages/api-types/index.ts`.
+- **Every route** can also return `401` (bad or missing token) and `500` (database error); the tables below list only the rest.
 
 ## Summary
 
@@ -32,19 +33,7 @@ Returns the caller's row from `profiles`.
 | Status | When |
 |---|---|
 | `200` | `Profile` |
-| `401` | bad or missing token |
 | `404` | the caller has no `profiles` row |
-| `500` | database error |
-
-```json
-{
-  "id": "uuid",
-  "username": "string | null",
-  "full_name": "string | null",
-  "avatar_url": "string | null",
-  "created_at": "timestamptz"
-}
-```
 
 ### `PATCH /profiles/me`
 
@@ -67,10 +56,8 @@ Partially updates the caller's profile and returns the updated row. Body type: `
 |---|---|
 | `200` | updated `Profile` |
 | `400` | missing or empty body; no editable fields present; wrong type; empty `full_name` or `username`; `avatar_url` outside the caller's folder |
-| `401` | bad or missing token |
 | `404` | the caller has no `profiles` row |
 | `409` | `username` already taken (Postgres `23505`) |
-| `500` | database error |
 
 ## Events
 
@@ -81,26 +68,6 @@ Returns every event the caller participates in (one `JOIN` of `events` and `even
 | Status | When |
 |---|---|
 | `200` | `Event[]`; `[]` if the caller has no events |
-| `401` | bad or missing token |
-| `500` | database error |
-
-```json
-[
-  {
-    "id": "uuid",
-    "created_by": "uuid",
-    "group_id": "uuid",
-    "title": "string",
-    "description": "string | null",
-    "status": "planning | upcoming | in_progress | done",
-    "final_starts_at": "timestamptz | null",
-    "final_ends_at": "timestamptz | null",
-    "final_location": "string | null",
-    "created_at": "timestamptz",
-    "updated_at": "timestamptz"
-  }
-]
-```
 
 ### `POST /events`
 
@@ -125,7 +92,6 @@ Creates an event in a group and adds the caller as a participant with `rsvp_stat
 |---|---|
 | `201` | created `Event` |
 | `400` | missing or empty body; `group_id` missing or not a UUID; `title` missing, not a string, or blank; `description` / `final_location` not a string or `null` |
-| `401` | bad or missing token |
 | `403` | caller is not a member of `group_id` |
 | `404` | backstop: foreign key `events_group_id_fkey` failed (`23503`) |
 | `500` | database error (including a caller with no `profiles` row) |
@@ -139,21 +105,6 @@ Returns every group the caller is a member of (one `JOIN` of `groups` and `group
 | Status | When |
 |---|---|
 | `200` | `Group[]`; `[]` if the caller is in no groups |
-| `401` | bad or missing token |
-| `500` | database error |
-
-```json
-[
-  {
-    "id": "uuid",
-    "name": "string",
-    "description": "string | null",
-    "created_by": "uuid",
-    "created_at": "timestamptz",
-    "archived_at": "timestamptz | null"
-  }
-]
-```
 
 ### `POST /groups`
 
@@ -175,7 +126,6 @@ Creates a group and makes the caller its `owner`, in one transaction (the `group
 |---|---|
 | `201` | created `Group` |
 | `400` | missing or empty body; `name` missing, not a string, or blank; `description` not a string or `null` |
-| `401` | bad or missing token |
 | `500` | database error (including a caller with no `profiles` row: foreign key `23503`) |
 
 ## Trying a route

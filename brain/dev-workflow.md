@@ -2,7 +2,7 @@
 
 ## Install
 
-- There is one root `package-lock.json` (the per-app lockfiles were removed).
+- There is one root `package-lock.json`.
 - Always run `npm install` from the **repo root**, never inside an app.
 - npm hoists the frontend's dependencies to the root `node_modules`; there is no `frontend/node_modules`.
 - Expo SDK 52+ configures Metro for monorepos automatically, so there is deliberately no `metro.config.js`.
@@ -37,14 +37,7 @@ To check: `dig +short <ref>.supabase.co` returns nothing. To fix: open the Supab
 
 ## Typecheck
 
-Metro doesn't typecheck, so run this after changes:
-
-```bash
-cd frontend && npx tsc --noEmit
-cd api && npx tsc --noEmit
-```
-
-Both should pass clean.
+Metro doesn't typecheck: run `npx tsc --noEmit` in `frontend/` and `api/` after changes. Both should pass clean.
 
 **If the frontend suddenly reports hundreds of errors** (`'View' cannot be used as a JSX component`, `Module "expo-router" has no exported member 'useRouter'`), the install is damaged, not the code. An editor's "update imports on file move" refactor (triggered by renaming or moving the app folder while it's open in VS Code or Cursor) can rewrite relative imports inside `node_modules/**/*.d.ts` to nonexistent paths.
 
@@ -57,15 +50,16 @@ Both should pass clean.
 - Its Pods point at root `node_modules` paths.
 - If the install layout or native config changes, regenerate it with `npx expo prebuild --clean --platform ios` rather than patching it by hand.
 
-## Native modules
-
-Adding a package with native code (e.g. `expo-image-picker`) or a config plugin in `app.json` means the installed dev client is stale. Rebuild with `npm run ios` (and `npx expo prebuild --clean --platform ios` if the native project gets out of sync). Metro reloads alone won't pick it up.
+- A new native package (e.g. `expo-image-picker`) or `app.json` config plugin makes the installed dev client stale: rebuild with `npm run ios`. Metro reloads won't pick it up.
 
 ## EAS Build
 
 Run `eas build` from `frontend/`, where `eas.json` lives. EAS CLI detects the workspace root and uploads the whole repo; no monorepo-specific config is needed.
 
-## Shared types
+## Shared types and migrations
 
-- Edit `packages/api-types/*.ts` directly; there is no build step.
-- After a schema change (migration applied), run `npm run gen:types` from the root. It runs `supabase gen types typescript --linked` (the repo is linked via `supabase/.temp/project-ref`) into `packages/api-types/database.ts`. Then typecheck both apps and commit the migration and the regenerated types together.
+- `packages/api-types/database.ts` is generated: `npm run gen:types` (root) runs `supabase gen types typescript --linked`. Never hand-edit it.
+- `index.ts` holds the API contract, derived rather than retyped: row aliases (`Profile = Tables<'profiles'>`), enum aliases (`EventStatus = Enums<'event_status'>`) and request bodies that `Pick` only client-sendable fields (`ProfileUpdate`, `EventCreate`, `GroupCreate`). Constrained value sets use Postgres enums, since `CHECK` lists don't generate unions.
+- Type-only package: both apps `import type` it, so nothing loads it at runtime and there's no build step. npm symlinks it into `node_modules`, so edits show up immediately. The frontend never redefines these types; repositories re-export them.
+- `Row` types say timestamps are `string` (the JSON shape); inside the API, `pg` returns `Date` until `res.json()`.
+- Schema change routine: apply a migration (save it as `supabase/migrations/<version Supabase recorded>_<name>.sql`), `npm run gen:types`, typecheck both apps, commit together.
