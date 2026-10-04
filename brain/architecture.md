@@ -36,5 +36,5 @@ Route details: `brain/endpoints.md`.
 | `events` | `GET /events/me`, `POST /events` | `eventsRepo` (home feed, create-event); detail screen partly mock |
 | `groups` | `GET /groups/me`, `POST /groups` | `groupsRepo` (groups tab, home group names, create-event picker, create-group) |
 | `polls` | none (tables only) | mock |
-| `calendars`, `busy_blocks` | none (tables only) | `my-calendar` screen with nothing saved yet |
+| `calendars`, `busy_blocks` | `GET /busy-blocks/me`, `POST /busy-blocks`; `PATCH`, `DELETE` are skeletons (`501`) | `my-calendar` screen with nothing saved yet |
 | notifications | none, no table | mock |

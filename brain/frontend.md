@@ -43,7 +43,7 @@ Expo, React Native, TypeScript, Supabase Auth. File-based routing with Expo Rout
   - Errors: end not after start; weekly with no days.
   - It is controlled by `initial` (`null` closes it) and resets every time it opens. Save hands `BusyTimeValues` to `onSave` (times as minutes after midnight).
 - **Long-press and drag** on the grid draws a block: `WeekCalendar`'s opt-in `onDrawBlock` prop. The drag starts only after a 300 ms hold, so plain swipes still scroll. It snaps to 15 minutes, gives a haptic tap on iOS, and shows a dashed preview. A hold without dragging draws one hour. Releasing opens the same sheet, pre-filled with that date and range, and the drawn block stays on the grid while the sheet is open.
-- **Nothing is saved yet.** With no busy-blocks API, Save just closes the sheet and the grid shows no saved blocks.
+- **Nothing is saved yet.** The screen isn't wired to `/busy-blocks` (`GET` and `POST` exist), so Save just closes the sheet and the grid shows no saved blocks.
 
 ## Home feed and groups tab
 

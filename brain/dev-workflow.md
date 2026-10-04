@@ -56,7 +56,6 @@ Metro doesn't typecheck: run `npx tsc --noEmit` in `frontend/` and `api/` after 
   - Accept the license with `sudo xcodebuild -license accept`. Until then `xcrun` exits `69` and Expo reports "xcrun is not configured correctly".
   - Run `sudo xcodebuild -runFirstLaunch`.
   - Wait for any simulator runtime install to finish before building. While it runs, simulator boot fails with "XPC error talking to SimLaunchHostService".
-- `npm run ios` reports "Skipping dev server" when it doesn't start Metro; run `npm start` from `frontend/` if the app can't connect.
 - If `pod install` crashes with Ruby `Encoding::CompatibilityError`, the shell needs `export LANG=en_US.UTF-8`.
 
 ## EAS Build

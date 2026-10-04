@@ -63,6 +63,8 @@ Settled decisions and why. When one changes, replace its entry.
   - The timezone name is validated by the API, since a CHECK can't look up zone names.
 - RLS is on with no policies (API-only, like the other tables).
 
+**MVP calendar sources: manual and Google Calendar only (2026-10-04).** Outlook comes after the MVP. The `calendar_source` enum already includes `outlook`, so adding it later needs no migration for the source itself.
+
 **Google / Outlook import plan (2026-10-04, not built).**
 - Routes:
   - `POST /calendars { source, code }` connects: the app runs the OAuth consent and sends the auth code; the API exchanges it and stores the refresh token server-side.
