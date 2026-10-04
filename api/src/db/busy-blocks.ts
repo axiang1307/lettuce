@@ -1,5 +1,5 @@
 import pool from '../lib/db';
-import type { BusyBlock, BusyBlockCreate, BusyBlockUpdate } from '@lettuce/api-types';
+import type { BusyBlock, BusyBlockCreate, BusyBlockUpdate, CalendarSource } from '@lettuce/api-types';
 
 export const getBusyBlocks = async(userId: string, from: string, to: string): Promise<BusyBlock[]> => {
 
@@ -38,10 +38,43 @@ export const postBusyBlock = async(calendarId: string, block: BusyBlockCreate): 
     return result.rows[0];
 }
 
+// One of the user's blocks plus its calendar's source; null if it doesn't exist or belongs to someone else.
+export const getOwnedBusyBlock = async(userId: string, blockId: string): Promise<(BusyBlock & { source: CalendarSource }) | null> => {
+    const result = await pool.query(
+        `SELECT b.*, c.source
+         FROM busy_blocks b
+         JOIN calendars c ON c.id = b.calendar_id
+         WHERE b.id = $1 AND c.user_id = $2`,
+        [blockId, userId]
+    );
+    return result.rows[0] ?? null;
+}
+
 export const patchBusyBlock = async(userId: string, blockId: string, changes: BusyBlockUpdate): Promise<BusyBlock | null> => {
-    throw new Error('Not implemented');
+    // Column names come from BusyBlockUpdate's keys, which the controller builds from an allow-list;
+    // values are always placeholders. $1 and $2 are the block and the caller, so fields start at $3.
+    const fields = Object.entries(changes).filter(([, value]) => value !== undefined);
+    const setClause = fields.map(([key], index) => `${key} = $${index + 3}`).join(', ');
+
+    // UPDATE ... FROM joins calendars so only the caller's block can match; zero rows means none did.
+    const result = await pool.query(
+        `UPDATE busy_blocks b
+         SET ${setClause}
+         FROM calendars c
+         WHERE c.id = b.calendar_id AND b.id = $1 AND c.user_id = $2
+         RETURNING b.*`,
+        [blockId, userId, ...fields.map(([, value]) => value)]
+    );
+    return result.rows[0] ?? null;
 }
 
 export const deleteBusyBlock = async(userId: string, blockId: string): Promise<boolean> => {
-    throw new Error('Not implemented');
+    // DELETE ... USING is DELETE's form of a join: the same ownership scoping as the update.
+    const result = await pool.query(
+        `DELETE FROM busy_blocks b
+         USING calendars c
+         WHERE c.id = b.calendar_id AND b.id = $1 AND c.user_id = $2`,
+        [blockId, userId]
+    );
+    return (result.rowCount ?? 0) > 0;
 }

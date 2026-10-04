@@ -187,24 +187,27 @@ export function WeekCalendar({ week, onWeekChange, blocks, selectedId, onBlockPr
                                 ))}
                             </View>
                         ))}
-                        {gridWidth > 0 && blocks.map((b) =>
-                            b.day >= 0 && b.day <= 6 && b.endHour > b.startHour ? (
+                        {gridWidth > 0 && blocks.map((b) => {
+                            // Clip to the hours the grid shows; a block entirely outside them isn't drawn.
+                            const start = Math.max(b.startHour, FIRST_HOUR);
+                            const end = Math.min(b.endHour, LAST_HOUR);
+                            return b.day >= 0 && b.day <= 6 && end > start ? (
                                 <Pressable
                                     key={b.id}
                                     onPress={() => onBlockPress?.(b.id)}
                                     style={[
                                         styles.block,
                                         {
-                                            top: (b.startHour - FIRST_HOUR) * ROW_H,
-                                            height: (b.endHour - b.startHour) * ROW_H,
+                                            top: (start - FIRST_HOUR) * ROW_H,
+                                            height: (end - start) * ROW_H,
                                             left: timeColW + b.day * cellW,
                                             width: cellW,
                                         },
                                         b.id === selectedId && styles.blockSelected,
                                     ]}
                                 />
-                            ) : null
-                        )}
+                            ) : null;
+                        })}
                         {gridWidth > 0 && draft && draftBlock ? (
                             <View
                                 pointerEvents="none"

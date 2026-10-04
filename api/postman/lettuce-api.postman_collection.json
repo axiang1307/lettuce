@@ -1583,6 +1583,824 @@
               }
             }
           }
+        },
+        {
+          "name": "200 PATCH updates only the sent fields",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 200\", () => pm.response.to.have.status(200));",
+                  "",
+                  "const block = pm.response.json();",
+                  "pm.test(\"same block\", () => pm.expect(block.id).to.eql(pm.environment.get(\"one_off_block_id\")));",
+                  "pm.test(\"sent times are updated, as HH:MM:SS\", () => {",
+                  "  pm.expect(block.start_time).to.eql(\"11:00:00\");",
+                  "  pm.expect(block.end_time).to.eql(\"12:15:00\");",
+                  "});",
+                  "pm.test(\"fields not sent are unchanged\", () => {",
+                  "  pm.expect(block.start_date).to.eql(\"2026-10-05\");",
+                  "  pm.expect(block.timezone).to.eql(\"America/New_York\");",
+                  "  pm.expect(block.repeat_days).to.be.null;",
+                  "});",
+                  "pm.test(\"body has exactly the BusyBlock fields\", () => pm.expect(block).to.have.all.keys(\"id\", \"calendar_id\", \"start_date\", \"end_date\", \"start_time\", \"end_time\", \"repeat_days\", \"timezone\", \"created_at\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/busy-blocks/{{one_off_block_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "busy-blocks",
+                "{{one_off_block_id}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"start_time\": \"11:00\",\n  \"end_time\": \"12:15\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "200 PATCH ignores unknown keys",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 200\", () => pm.response.to.have.status(200));",
+                  "",
+                  "const block = pm.response.json();",
+                  "pm.test(\"calendar_id can't be moved by the client\", () => pm.expect(block.calendar_id).to.not.eql(\"00000000-0000-0000-0000-000000000000\"));",
+                  "pm.test(\"the allowed field is applied\", () => pm.expect(block.start_date).to.eql(\"2026-10-06\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/busy-blocks/{{one_off_block_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "busy-blocks",
+                "{{one_off_block_id}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"start_date\": \"2026-10-06\",\n  \"calendar_id\": \"00000000-0000-0000-0000-000000000000\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "200 PATCH weekly days are deduplicated and sorted",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 200\", () => pm.response.to.have.status(200));",
+                  "",
+                  "const block = pm.response.json();",
+                  "pm.test(\"repeat_days come back sorted, without duplicates\", () => pm.expect(block.repeat_days).to.eql([2, 4]));",
+                  "pm.test(\"end_date is kept\", () => pm.expect(block.end_date).to.eql(\"2026-12-31\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/busy-blocks/{{weekly_block_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "busy-blocks",
+                "{{weekly_block_id}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"repeat_days\": [\n    4,\n    2,\n    4\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "400 PATCH end_time before the stored start_time",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"names the rule\", () => pm.expect(pm.response.json().error).to.include(\"end_time\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/busy-blocks/{{one_off_block_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "busy-blocks",
+                "{{one_off_block_id}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"end_time\": \"08:00\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Only end_time is sent; the stored start_time (11:00) makes it invalid, so the service must merge before checking."
+          }
+        },
+        {
+          "name": "400 PATCH weekly to one-off but keeps end_date",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"names the rule\", () => pm.expect(pm.response.json().error).to.include(\"end_date\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/busy-blocks/{{weekly_block_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "busy-blocks",
+                "{{weekly_block_id}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"repeat_days\": null\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "The stored end_date (2026-12-31) is only allowed on weekly blocks, so dropping repeat_days alone is rejected."
+          }
+        },
+        {
+          "name": "400 PATCH end_date before the stored start_date",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/busy-blocks/{{weekly_block_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "busy-blocks",
+                "{{weekly_block_id}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"end_date\": \"2026-09-01\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "400 PATCH empty body",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/busy-blocks/{{one_off_block_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "busy-blocks",
+                "{{one_off_block_id}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "400 PATCH no editable fields",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/busy-blocks/{{one_off_block_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "busy-blocks",
+                "{{one_off_block_id}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id\": \"00000000-0000-0000-0000-000000000000\",\n  \"created_at\": \"2026-01-01T00:00:00Z\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "400 PATCH impossible date",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/busy-blocks/{{one_off_block_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "busy-blocks",
+                "{{one_off_block_id}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"start_date\": \"2026-02-30\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "400 PATCH bad time format",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/busy-blocks/{{one_off_block_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "busy-blocks",
+                "{{one_off_block_id}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"start_time\": \"9am\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "400 PATCH repeat_days empty",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/busy-blocks/{{weekly_block_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "busy-blocks",
+                "{{weekly_block_id}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"repeat_days\": []\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "400 PATCH unknown timezone",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/busy-blocks/{{one_off_block_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "busy-blocks",
+                "{{one_off_block_id}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"timezone\": \"Mars/Base\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "400 PATCH id not a UUID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/busy-blocks/not-a-uuid",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "busy-blocks",
+                "not-a-uuid"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"start_time\": \"09:00\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "404 PATCH unknown block",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 404\", () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/busy-blocks/{{$randomUUID}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "busy-blocks",
+                "{{$randomUUID}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"start_time\": \"09:00\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "A block that doesn't exist and another user's block get the same 404, so ids reveal nothing."
+          }
+        },
+        {
+          "name": "200 PATCH weekly to one-off",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 200\", () => pm.response.to.have.status(200));",
+                  "",
+                  "const block = pm.response.json();",
+                  "pm.test(\"now a one-off: no repeat_days, no end_date\", () => {",
+                  "  pm.expect(block.repeat_days).to.be.null;",
+                  "  pm.expect(block.end_date).to.be.null;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/busy-blocks/{{weekly_block_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "busy-blocks",
+                "{{weekly_block_id}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"repeat_days\": null,\n  \"end_date\": null\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "204 DELETE removes the block",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 204\", () => pm.response.to.have.status(204));",
+                  "pm.test(\"no body\", () => pm.expect(pm.response.text()).to.eql(\"\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/busy-blocks/{{one_off_block_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "busy-blocks",
+                "{{one_off_block_id}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "404 DELETE the same block again",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 404\", () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/busy-blocks/{{one_off_block_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "busy-blocks",
+                "{{one_off_block_id}}"
+              ]
+            },
+            "description": "Deleting twice is a 404 the second time: the block is gone."
+          }
+        },
+        {
+          "name": "200 GET no longer lists the deleted block",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 200\", () => pm.response.to.have.status(200));",
+                  "",
+                  "const ids = pm.response.json().map((b) => b.id);",
+                  "pm.test(\"deleted block is gone\", () => pm.expect(ids).to.not.include(pm.environment.get(\"one_off_block_id\")));",
+                  "pm.test(\"the other block is still there\", () => pm.expect(ids).to.include(pm.environment.get(\"weekly_block_id\")));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/busy-blocks/me?from=2026-10-01&to=2026-10-31",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "busy-blocks",
+                "me"
+              ],
+              "query": [
+                {
+                  "key": "from",
+                  "value": "2026-10-01"
+                },
+                {
+                  "key": "to",
+                  "value": "2026-10-31"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "400 DELETE id not a UUID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/busy-blocks/not-a-uuid",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "busy-blocks",
+                "not-a-uuid"
+              ]
+            }
+          }
+        },
+        {
+          "name": "404 DELETE unknown block",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 404\", () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/busy-blocks/{{$randomUUID}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "busy-blocks",
+                "{{$randomUUID}}"
+              ]
+            }
+          }
         }
       ]
     }
