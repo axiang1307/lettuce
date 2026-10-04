@@ -47,7 +47,7 @@ Rules:
 - Info files state how things are; to-dos go only in `action-items.md`. Delete finished items, moving lasting knowledge to an info file.
 - Update the describing file in the same change; record decisions in `decisions.md`.
 - Each fact lives in one file. Edit in place; never append a contradiction.
-- `/update-brain` records a session's lasting knowledge and pushes only that to `main`.
+- **Brain edits go only to `main`, never into a feature-branch commit.** Leave `brain/` and `CLAUDE.md` out of feature commits (e.g. `git add -A -- . ':!brain' ':!CLAUDE.md'`). `/update-brain` records the session's lasting knowledge and moves those edits to `main` from a worktree. A branch picks up newer brain content by merging `main`.
 
 @brain/architecture.md
 @brain/action-items.md

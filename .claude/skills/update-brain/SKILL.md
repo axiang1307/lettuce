@@ -2,12 +2,14 @@
 name: update-brain
 description: Record what this session established into brain/ (lasting facts, decisions, action-item changes, pruning) and push only that to main.
 disable-model-invocation: true
-allowed-tools: Bash(git status:*), Bash(git diff:*), Bash(git add:*), Bash(git commit:*), Bash(git fetch:*), Bash(git branch:*), Bash(git worktree:*), Bash(git -C:*)
+allowed-tools: Bash(git status:*), Bash(git diff:*), Bash(git add:*), Bash(git fetch:*), Bash(git branch:*), Bash(git worktree:*), Bash(git -C:*), Bash(git restore:*), Bash(git merge:*)
 ---
 
 # Update the brain
 
 Write this session's lasting knowledge into `brain/`, then push only that change to `main`. The brain rules in the root `CLAUDE.md` apply.
+
+**Brain edits never become a commit on the current branch.** They're committed only on `main`, from a temporary worktree, and then dropped from the current branch's working tree.
 
 ## 1. Decide what's worth keeping
 
@@ -29,23 +31,25 @@ Only write what you've confirmed in the code or database, including every path, 
 
 ## 3. Push to main
 
-Only the brain commit goes to `main`, from a separate worktree, so other work on the current branch (committed or not) never reaches `main`. Run each line as its own command; nothing relies on shell state. `<branch>` is the current branch (including `main` itself).
+Edit `brain/` and `CLAUDE.md` in the current working tree as usual, but **don't commit them here**. Move the uncommitted edits onto `origin/main` in a temporary worktree, commit and push there, then discard them from the current branch. Run each line as its own command; nothing relies on shell state.
 
 ```bash
-git add brain/ CLAUDE.md && git commit -m "brain: <what changed>" -- brain/ CLAUDE.md
 git fetch origin main
 git worktree remove --force ../lettuce-brain-merge   # only if left over from an earlier run
 git worktree add --detach ../lettuce-brain-merge origin/main
-git -C ../lettuce-brain-merge cherry-pick <branch>
+git diff HEAD -- brain/ CLAUDE.md | git -C ../lettuce-brain-merge apply --3way
+git -C ../lettuce-brain-merge commit -m "brain: <what changed>"
 git -C ../lettuce-brain-merge push origin HEAD:main
 git worktree remove ../lettuce-brain-merge
+git restore --source=HEAD --staged --worktree brain/ CLAUDE.md
 ```
 
-Always finish the push:
-- **Conflicts:** resolve them in the worktree, keeping `main`'s facts plus the new ones, then `git -C ../lettuce-brain-merge add -A` and `git -C ../lettuce-brain-merge -c core.editor=true cherry-pick --continue` (the `-c` skips the editor).
+- `git diff HEAD` takes every brain edit since the branch's last commit, staged or not. `apply --3way` replays the edits onto `main` and stages them there, so it also works when `main`'s brain has moved on since this branch was cut.
+- **The diff is empty:** nothing to push; skip the rest.
+- **Conflicts:** resolve them in the worktree, keeping `main`'s facts plus the new ones, then `git -C ../lettuce-brain-merge add -A` and commit.
 - **Push rejected because `main` moved:** `git -C ../lettuce-brain-merge pull --rebase origin main` (on conflicts: resolve, `add -A`, then `-c core.editor=true rebase --continue`), then push again.
-- **Cherry-pick is empty** (already on `main`): `git -C ../lettuce-brain-merge cherry-pick --skip`; there's nothing to push.
-- Never force-push.
+- **The last line** removes the branch's copy of the edits (they live on `main` now), so a later `git add -A` on the branch can't commit them. The branch sees them once it merges `main` (`git merge origin/main`, only when the user wants that). If the session is on `main` itself, finish with `git merge --ff-only origin/main` instead.
+- Never force-push, and never commit `brain/` or `CLAUDE.md` on a feature branch.
 
 ## 4. Report
 
