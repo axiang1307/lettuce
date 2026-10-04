@@ -49,15 +49,18 @@ Shared clients are created once at import time: `src/lib/db.ts` (pg `Pool`) and 
   | Code | Meaning |
   |---|---|
   | `200` | success |
-  | `400` | bad input |
+  | `201` | created (`POST`) |
+  | `204` | success with no body (`DELETE`) |
+  | `400` | bad input, or a business rule broken (`ValidationError`, or a CHECK violation `23514` that slipped past it) |
   | `401` | auth failure (middleware or controller guard) |
-  | `403` | signed in, but not allowed (`ForbiddenError`, e.g. not a group member) |
-  | `404` | defensive missing row |
+  | `403` | signed in, but not allowed (`ForbiddenError`, e.g. not a group member, or editing a synced busy block) |
+  | `404` | missing row; also another user's row (`NotFoundError`), so ids reveal nothing |
   | `409` | unique-constraint conflict |
   | `500` | unexpected database or server error |
 
 - **How `pg` reports errors:** it **throws** on query errors, with the Postgres code on `error.code` (and the constraint name on `error.constraint`). Matching nothing isn't an error: single-row reads return `rows[0] ?? null` (→ `404`); lists return `[]` (→ `200`, never `404`); inserts with `RETURNING *` always return a row or throw, so they're typed without `| null`.
-- **Domain errors from services:** a service that refuses a request throws a class from `src/lib/errors.ts` (currently `ForbiddenError`). The service says *what* went wrong; the controller checks `instanceof` in its `catch` and picks the status code (`ForbiddenError` → `403`). Services never set HTTP statuses themselves.
+- **Domain errors from services:** a service that refuses a request throws a class from `src/lib/errors.ts` (`ForbiddenError` → `403`, `NotFoundError` → `404`, `ValidationError` → `400`). The service says *what* went wrong; the controller checks `instanceof` in its `catch` and picks the status code. Services never set HTTP statuses themselves.
+- **`date` columns come back as `YYYY-MM-DD` strings** (a global pg type parser in `src/lib/db.ts`; pg's default is a JS `Date` at the server's midnight). `time` columns are already `HH:MM:SS` strings.
 - **Shared access checks** live in the db layer of the resource they're about, e.g. `isMember(groupId, userId)` in `src/db/groups.ts`, used by the events service.
 - **Catching errors:** controllers wrap service calls in `try/catch`; there's no error-handling middleware.
 

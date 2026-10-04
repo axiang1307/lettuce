@@ -21,12 +21,12 @@ Every route the API serves. Pipeline, layering, access rules and the error contr
 | `POST` | `/events` | `Event` (`201`) | `eventsRepo.create` (create-event screen) |
 | `GET` | `/groups/me` | `Group[]` | `groupsRepo.getGroups` (groups tab, home feed, create-event picker) |
 | `POST` | `/groups` | `Group` (`201`) | `groupsRepo.create` (create-group screen) |
-| `GET` | `/busy-blocks/me?from&to` | `BusyBlock[]` | none yet (My Calendar shows nothing saved) |
-| `POST` | `/busy-blocks` | `BusyBlock` (`201`) | none yet (`BusyTimeSheet` save is a no-op) |
+| `GET` | `/busy-blocks/me?from&to` | `BusyBlock[]` | `busyBlocksRepo.getMine` (My Calendar's visible week) |
+| `POST` | `/busy-blocks` | `BusyBlock` (`201`) | `busyBlocksRepo.create` (My Calendar's form sheet) |
+| `PATCH` | `/busy-blocks/:id` | `BusyBlock` | `busyBlocksRepo.update` (My Calendar's edit sheet) |
+| `DELETE` | `/busy-blocks/:id` | nothing (`204`) | `busyBlocksRepo.remove` (My Calendar's edit sheet) |
 
 Route files: `api/src/routes/profiles.ts`, `api/src/routes/events.ts`, `api/src/routes/groups.ts`, `api/src/routes/busy-blocks.ts`, mounted in `api/src/index.ts`.
-
-**Busy blocks:** `GET /busy-blocks/me` and `POST /busy-blocks` are implemented (below). `PATCH /busy-blocks/:id` and `DELETE /busy-blocks/:id` are mounted, but their controllers return `501 Not Implemented` and their service and db stubs throw.
 
 ## Profiles
 
@@ -179,6 +179,26 @@ No transaction: if the block insert fails, an empty manual calendar is still val
 | `201` | created `BusyBlock` |
 | `400` | missing or empty body; any field rule above broken |
 | `500` | database error (including a caller with no `profiles` row: foreign key `23503` when creating the calendar) |
+
+### `PATCH /busy-blocks/:id` and `DELETE /busy-blocks/:id`
+
+Change or remove one of the caller's blocks. `PATCH` returns the updated row; `DELETE` returns `204` with no body.
+
+The service first loads the block with `getOwnedBusyBlock` (joined to `calendars` on `user_id = caller`), then:
+- **No row** (no such block, or someone else's) → `NotFoundError` → `404`. The two cases are deliberately the same, so block ids reveal nothing about other users.
+- **The block is on a synced (non-manual) calendar** → `ForbiddenError` → `403`. The next sync would undo the change.
+- **`PATCH` only:** it merges the change onto the stored row and checks the cross-field rules. These are end after start, `end_date` only when `repeat_days` is set, and `end_date >= start_date`. A break is a `ValidationError` → `400`. A CHECK violation (`23514`) is also mapped to `400` as a backstop.
+
+The `UPDATE … FROM calendars` / `DELETE … USING calendars` statements repeat the ownership scoping, and zero rows → `404`.
+
+`PATCH` body: any subset of the `POST` fields, each validated on its own like `POST`. Send `null` to clear `end_date` or `repeat_days`. Making a weekly block one-off needs `"repeat_days": null, "end_date": null`. Other keys are ignored.
+
+| Status | When |
+|---|---|
+| `200` / `204` | updated block / deleted |
+| `400` | `:id` not a UUID; `PATCH`: empty body, no editable fields, a field's format, or a cross-field rule |
+| `403` | the block is on a synced calendar |
+| `404` | no such block, or not the caller's |
 
 ## Trying a route
 

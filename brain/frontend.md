@@ -41,9 +41,18 @@ Expo, React Native, TypeScript, Supabase Auth. File-based routing with Expo Rout
   - **One time** or **Repeats weekly**. One time shows a date field (default today). Weekly shows S–S day chips (the starting day preselected) and an optional **Until** date ("No end date" sets one three months out; **Clear** removes it).
   - **Starts** and **Ends** times use `@react-native-community/datetimepicker`: compact inline pickers on iOS in 15-minute steps, and a pill that opens the dialog on Android.
   - Errors: end not after start; weekly with no days.
-  - It is controlled by `initial` (`null` closes it) and resets every time it opens. Save hands `BusyTimeValues` to `onSave` (times as minutes after midnight).
+  - It is controlled by `initial` (`null` closes it) and resets every time it opens. Save hands `BusyTimeValues` (times as minutes after midnight) to `onSave`, which may be async: the sheet shows "Saving…" and, if it throws, shows the message and stays open.
 - **Long-press and drag** on the grid draws a block: `WeekCalendar`'s opt-in `onDrawBlock` prop. The drag starts only after a 300 ms hold, so plain swipes still scroll. It snaps to 15 minutes, gives a haptic tap on iOS, and shows a dashed preview. A hold without dragging draws one hour. Releasing opens the same sheet, pre-filled with that date and range, and the drawn block stays on the grid while the sheet is open.
-- **Nothing is saved yet.** The screen isn't wired to `/busy-blocks` (`GET` and `POST` exist), so Save just closes the sheet and the grid shows no saved blocks.
+- **Data:** `busyBlocksRepo` (`lib/repositories/busy-blocks.ts`).
+  - In `useFocusEffect` and whenever the week changes, the screen loads `GET /busy-blocks/me` for the visible Sunday–Saturday. It drops responses for weeks already paged away from, and shows a spinner, plus an error with **Retry**.
+  - Save posts through the repo, then closes the sheet and reloads the week.
+- **Mapping** (`components/calendar/busy-blocks.ts`):
+  - `toBusyBlockCreate` turns the form's values into the `POST` body: local dates and `HH:MM` times, the device's IANA time zone, and weekly blocks starting on the Sunday of the opened day's week.
+  - `blocksForWeek` expands weekly rules onto their weekdays within `start_date` / `end_date`, so expansion happens on the client.
+  - `WeekCalendar` clips blocks to its 8 AM–11 PM rows.
+- **Tapping a saved block opens it for editing.** Grid ids are `<block id>:<YYYY-MM-DD>`, because a weekly block shows on several days. The screen finds the block, highlights the tapped copy, and opens `BusyTimeSheet` pre-filled (`toBusyTimeInitial`). Passing `onDelete` turns the sheet into "Edit busy time" with a confirmed **Delete busy time** button.
+  - Save sends `PATCH` with every field (`toBusyBlockUpdate`), so the server never merges half a change. A block that stays weekly keeps its `start_date` and stored `timezone`.
+  - Edits and deletes apply to the whole weekly series.
 
 ## Home feed and groups tab
 

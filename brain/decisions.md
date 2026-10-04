@@ -63,6 +63,13 @@ Settled decisions and why. When one changes, replace its entry.
   - The timezone name is validated by the API, since a CHECK can't look up zone names.
 - RLS is on with no policies (API-only, like the other tables).
 
+**Busy blocks: someone else's id is `404`, synced blocks are `403`, `DELETE` is `204` (2026-10-04).**
+- `404` for both "doesn't exist" and "not yours", so probing ids reveals nothing (the usual REST practice, e.g. GitHub's).
+- `403` is kept for "yours, but not allowed": only manual blocks can be edited or deleted, because the next sync would undo changes to synced ones.
+- `DELETE` returns `204` with no body (`authendFetch` already returns `null` for it).
+
+**Weekly busy blocks are expanded on the client (2026-10-04).** `GET /busy-blocks/me` returns weekly blocks as rules (`repeat_days` plus date bounds), and the app places them on the visible week (`blocksForWeek`). This keeps the API a plain range query, and the grid needs per-day positions anyway. Group overlap will do its own expansion on the server, where it needs instants across time zones.
+
 **MVP calendar sources: manual and Google Calendar only (2026-10-04).** Outlook comes after the MVP. The `calendar_source` enum already includes `outlook`, so adding it later needs no migration for the source itself.
 
 **Google / Outlook import plan (2026-10-04, not built).**
