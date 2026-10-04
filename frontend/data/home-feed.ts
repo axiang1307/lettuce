@@ -1,6 +1,8 @@
 /**
- * Home feed + event detail source for the Home tab.
- * PLACEHOLDER: replace with API / repository when backend exists.
+ * PLACEHOLDER event detail data. The home feed uses real events (components/home/feed.ts).
+ * These mocks back the profile tab's mock cards (ids evt-1…evt-4), and HOME_FEED_EVENTS[0]
+ * is the template whose calendar / poll / activity panels real events borrow on the detail
+ * screen (toDetailEvent). Replace once GET /events/:id and polls exist.
  */
 
 import type { EventId } from '@/domain/entities';

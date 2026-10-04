@@ -1,9 +1,10 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
-import { Href, useRouter } from 'expo-router';
-import React, { useState, useEffect } from 'react';
+import { Href, useFocusEffect, useRouter } from 'expo-router';
+import React, { useCallback, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { avatarsRepo } from '@/lib/repositories/avatars';
 import { profilesRepo, type Profile } from '@/lib/repositories/profiles';
 
 import { HomeLogo } from '@/components/home/home-logo';
@@ -108,14 +109,18 @@ export default function ProfileTab() {
 
   const [profile, setProfile] = useState<Profile | null>(null);
 
-  useEffect(() => {   
-    profilesRepo.getMe()
-      .then(setProfile)
-      .catch(() => {}); // silently fail — greeting just won't show
-  }, []);
+  // Refetch on focus so changes saved on the edit screen show up when navigating back.
+  useFocusEffect(
+    useCallback(() => {
+      profilesRepo.getMe()
+        .then(setProfile)
+        .catch(() => {}); // silently fail — greeting just won't show
+    }, [])
+  );
 
   const name = profile?.full_name;
   const username = profile?.username;
+  const avatarSource = profile?.avatar_url ? { uri: avatarsRepo.publicUrl(profile.avatar_url) } : IMG.me;
 
   return (
     <View style={styles.screen}>
@@ -131,10 +136,16 @@ export default function ProfileTab() {
 
         <View style={styles.profileHeader}>
           <View style={styles.profileAvatarWrap}>
-            <Image source={IMG.me} style={styles.profileAvatar} contentFit="cover" />
+            <Image source={avatarSource} style={styles.profileAvatar} contentFit="cover" />
           </View>
           <Text style={styles.name}>{name}</Text>
           <Text style={styles.handle}>{username}</Text>
+          <Pressable
+            style={({ pressed }) => [styles.editButton, pressed && styles.pressed]}
+            onPress={() => router.push('/edit-profile' as Href)}>
+            <MaterialIcons name="edit" size={16} color="#9cad50" />
+            <Text style={styles.editButtonText}>Edit Profile</Text>
+          </Pressable>
           <View style={styles.statsRow}>
             <Stat value="5" label="Friends" />
             <Stat value="2" label="Groups" />
@@ -266,12 +277,29 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#9e9e9e',
   },
+  editButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginVertical: 10,
+    height: 36,
+    paddingHorizontal: 20,
+    borderRadius: 32,
+    borderWidth: 2,
+    borderColor: '#9cad50',
+    backgroundColor: '#ffffff',
+  },
+  editButtonText: {
+    color: '#9cad50',
+    fontSize: 14,
+    lineHeight: 21,
+    fontWeight: '600',
+  },
   statsRow: {
     width: '100%',
     flexDirection: 'row',
     justifyContent: 'center',
     gap: 30,
-    marginTop: 10,
   },
   statItem: {
     alignItems: 'center',

@@ -35,7 +35,8 @@ All three use one Supabase project.
 |---|---|
 | `brain/product.md` | what Lettuce is, entities, non-goals, product source of truth |
 | `brain/architecture.md` | how the pieces connect, auth and data flow, shared types, resource migration status |
-| `brain/api.md` | API pipeline, layering, identity and access rules, endpoints, error contract, env |
+| `brain/api.md` | API pipeline, layering, identity and access rules, error contract, env |
+| `brain/endpoints.md` | every API route: request, validation, status codes, response shape |
 | `brain/frontend.md` | routing, event flow, data and repository layer, theme, guardrails, env |
 | `brain/dev-workflow.md` | install, run, typecheck, iOS/CNG, EAS, known breakages |
 | `brain/decisions.md` | settled decisions and their rationale |

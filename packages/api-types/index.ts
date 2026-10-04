@@ -1,26 +1,23 @@
-export type Profile = {
-    id: string,
-    username: string | null,
-    full_name: string | null,
-    avatar_url: string | null,
-    created_at: string
-}
+// API contract types, derived from the Supabase-generated schema in ./database.ts
+// (regenerate with `npm run gen:types` from the repo root). Row aliases follow the
+// schema automatically; Pick lists are deliberate choices about what clients may send.
+import type { Enums, Tables, TablesInsert, TablesUpdate } from './database';
 
-export type ProfileUpdate = {
-    username?: string | null,
-    full_name?: string | null,
-    avatar_url?: string | null
-}
+export type Profile = Tables<'profiles'>
 
-export type Event = {
-    id: string,
-    created_by: string,
-    title: string,
-    description: string | null,
-    status: string,
-    final_starts_at: string | null,
-    final_ends_at: string | null,
-    final_location: string | null,
-    created_at: string,
-    updated_at: string
-}
+// id and created_at are system-set, so PATCH /profiles/me only accepts these
+export type ProfileUpdate = Pick<TablesUpdate<'profiles'>, 'full_name' | 'username' | 'avatar_url'>
+
+export type Event = Tables<'events'>
+
+// 'planning' | 'upcoming' | 'in_progress' | 'done' (Postgres enum event_status)
+export type EventStatus = Enums<'event_status'>
+
+export type Group = Tables<'groups'>
+
+// Body of POST /groups. created_by comes from req.user; the creator becomes the owner.
+export type GroupCreate = Pick<TablesInsert<'groups'>, 'name' | 'description'>
+
+// Body of POST /events. group_id is required (every event belongs to one group);
+// created_by comes from req.user, never the body.
+export type EventCreate = Pick<TablesInsert<'events'>, 'group_id' | 'title' | 'description' | 'final_location'>

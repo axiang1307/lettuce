@@ -14,36 +14,6 @@ export type Database = {
   }
   public: {
     Tables: {
-      event_groups: {
-        Row: {
-          event_id: string
-          group_id: string
-        }
-        Insert: {
-          event_id: string
-          group_id: string
-        }
-        Update: {
-          event_id?: string
-          group_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "event_groups_event_id_fkey"
-            columns: ["event_id"]
-            isOneToOne: false
-            referencedRelation: "events"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "event_groups_group_id_fkey"
-            columns: ["group_id"]
-            isOneToOne: false
-            referencedRelation: "groups"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       event_participants: {
         Row: {
           added_at: string
@@ -88,8 +58,9 @@ export type Database = {
           final_ends_at: string | null
           final_location: string | null
           final_starts_at: string | null
+          group_id: string
           id: string
-          status: string
+          status: Database["public"]["Enums"]["event_status"]
           title: string
           updated_at: string
         }
@@ -100,8 +71,9 @@ export type Database = {
           final_ends_at?: string | null
           final_location?: string | null
           final_starts_at?: string | null
+          group_id: string
           id?: string
-          status?: string
+          status?: Database["public"]["Enums"]["event_status"]
           title: string
           updated_at?: string
         }
@@ -112,8 +84,9 @@ export type Database = {
           final_ends_at?: string | null
           final_location?: string | null
           final_starts_at?: string | null
+          group_id?: string
           id?: string
-          status?: string
+          status?: Database["public"]["Enums"]["event_status"]
           title?: string
           updated_at?: string
         }
@@ -123,6 +96,13 @@ export type Database = {
             columns: ["created_by"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "events_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "groups"
             referencedColumns: ["id"]
           },
         ]
@@ -365,7 +345,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      event_status: "planning" | "upcoming" | "in_progress" | "done"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -381,12 +361,12 @@ export type Tables<
   DefaultSchemaTableNameOrOptions extends
     | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
         DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -410,11 +390,11 @@ export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -435,11 +415,11 @@ export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -460,11 +440,11 @@ export type Enums<
   DefaultSchemaEnumNameOrOptions extends
     | keyof DefaultSchema["Enums"]
     | { schema: keyof DatabaseWithoutInternals },
-  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+  EnumName extends (DefaultSchemaEnumNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaEnumNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -477,11 +457,11 @@ export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
     | keyof DefaultSchema["CompositeTypes"]
     | { schema: keyof DatabaseWithoutInternals },
-  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+  CompositeTypeName extends (PublicCompositeTypeNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
-    : never = never,
+    : never) = never,
 > = PublicCompositeTypeNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -492,6 +472,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      event_status: ["planning", "upcoming", "in_progress", "done"],
+    },
   },
 } as const

@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useMemo, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import React, { useEffect, useMemo, useState } from 'react';
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ActivityPanel } from '@/components/event/activity-panel';
@@ -9,18 +9,37 @@ import { CalendarPanel } from '@/components/event/calendar-panel';
 import { EventDetailsPanel } from '@/components/event/event-details-panel';
 import { PollPanel } from '@/components/event/poll-panel';
 import { Colors } from '@/constants/theme';
-import { getHomeEventById, type EventFlowMode } from '@/data/home-feed';
+import { toDetailEvent } from '@/components/home/feed';
+import { getHomeEventById, type EventFlowMode, type HomeFeedEvent } from '@/data/home-feed';
+import { eventsRepo } from '@/lib/repositories/events';
+import { groupsRepo } from '@/lib/repositories/groups';
 
 export default function EventDetailScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { eventId, mode, from } = useLocalSearchParams<{ eventId: string; mode?: string; from?: string }>();
-  const event = eventId ? getHomeEventById(eventId) : undefined;
+  const mockEvent = eventId ? getHomeEventById(eventId) : undefined;
+  // Real events: undefined = still loading, null = not found among the caller's events.
+  const [realEvent, setRealEvent] = useState<HomeFeedEvent | null | undefined>(undefined);
+  const event = mockEvent ?? realEvent ?? undefined;
   const initialMode = useMemo<EventFlowMode>(() => {
     if (mode === 'calendar' || mode === 'poll' || mode === 'activity') return mode;
     return 'detail';
   }, [mode]);
   const [flowMode, setFlowMode] = useState<EventFlowMode>(initialMode);
+
+  // No GET /events/:id yet, so find the event among the caller's events. Only events the
+  // caller participates in come back, which doubles as the access check.
+  useEffect(() => {
+    if (mockEvent || !eventId) return;
+    Promise.all([eventsRepo.getEvents(), groupsRepo.getGroups()])
+      .then(([events, groups]) => {
+        const found = events.find((e) => e.id === eventId);
+        const groupName = groups.find((g) => g.id === found?.group_id)?.name;
+        setRealEvent(found ? toDetailEvent(found, groupName) : null);
+      })
+      .catch(() => setRealEvent(null));
+  }, [eventId, mockEvent]);
 
   const handleBack = () => {
     if (flowMode !== 'detail') {
@@ -33,6 +52,17 @@ export default function EventDetailScreen() {
       router.replace((from ?? '/(tabs)') as any);
     }
   };
+
+  if (!event && realEvent === undefined && !mockEvent) {
+    return (
+      <>
+        <Stack.Screen options={{ headerShown: false }} />
+        <View style={styles.centered}>
+          <ActivityIndicator color={Colors.light.tint} />
+        </View>
+      </>
+    );
+  }
 
   if (!event) {
     return (
