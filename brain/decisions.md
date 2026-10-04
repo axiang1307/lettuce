@@ -40,6 +40,39 @@ Settled decisions and why. When one changes, replace its entry.
 
 **Services throw typed errors; controllers map them to statuses (2026-10-03).** e.g. `ForbiddenError` → `403`. Keeps HTTP out of business logic, mirroring how Postgres codes (`23505` → `409`) are mapped in controllers.
 
+## Calendar
+
+**Manual calendars store busy blocks, not free slots (2026-10-04).**
+- Users enter times they're busy, and free time is whatever isn't busy. Imported calendars also produce busy events, so manual and imported entries can share one table and the same overlap logic. The alternative was when2meet-style free slots.
+- A block is either one-off (a date and time range) or weekly (weekdays, local start and end time, optional end date). Full iCal RRULE was too much work for now. Without weekly repeats, entering a class schedule by hand is tedious.
+- Entry is a form plus a week view, not when2meet-style painting:
+  - The `+` button opens a bottom-sheet form with native time pickers (`@react-native-community/datetimepicker`, a native module).
+  - Long-press then drag on the grid draws a block and opens the same form pre-filled. A plain swipe still scrolls.
+  - Both stay touch-friendly and handle recurrence, unlike painting cells.
+
+**Blocks belong to a calendar; one shared `busy_blocks` table (2026-10-04, migration `20261004055730_calendars_busy_blocks.sql`).**
+- Tables:
+  - `calendars`: `id`, `user_id` → `profiles` (cascade), `source` enum `calendar_source` (`manual` / `google` / `outlook`), unique `(user_id, source)`.
+  - `busy_blocks`: `calendar_id` → `calendars` (cascade).
+- Why not a table per user: "unique to the user" is a `WHERE` clause plus an index. Per-user tables would need dynamic SQL to compute group overlap across members, and every schema change would become N migrations.
+- Why a separate `calendars` table: per-connection data (sync tokens, last sync time, connection status) needs a home. Re-syncing or disconnecting one source touches only its own blocks. Adding the table later would have needed a data migration. `user_id` isn't the primary key because a user can have one calendar per source.
+- Block shape: one row covers both kinds.
+  - `start_date`, `end_date` (weekly "until"; null = forever), local `start_time` / `end_time`, IANA `timezone`.
+  - `repeat_days smallint[]`: null = one-off, otherwise 0 = Sunday to 6 = Saturday. It replaces a `recurring` flag, which could contradict the days.
+  - CHECKs: `end_time > start_time` (no overnight blocks), valid non-empty days, end date only on weekly blocks, `end_date >= start_date`.
+  - The timezone name is validated by the API, since a CHECK can't look up zone names.
+- RLS is on with no policies (API-only, like the other tables).
+
+**MVP calendar sources: manual and Google Calendar only (2026-10-04).** Outlook comes after the MVP. The `calendar_source` enum already includes `outlook`, so adding it later needs no migration for the source itself.
+
+**Google / Outlook import plan (2026-10-04, not built).**
+- Routes:
+  - `POST /calendars { source, code }` connects: the app runs the OAuth consent and sends the auth code; the API exchanges it and stores the refresh token server-side.
+  - `POST /calendars/:id/sync` re-fetches.
+  - `DELETE /calendars/:id` disconnects; the cascade removes its blocks.
+- Sync stores already-expanded occurrences over a rolling window (e.g. 8 weeks) as one-off blocks rather than translating RRULEs. It replaces a calendar's blocks in one transaction (delete, then insert) through the service and db layers, not by calling the block controller.
+- Token columns come in a later migration.
+
 ## Monorepo / tooling
 
 **Merge the frontend and API repos into one npm-workspaces monorepo (2026-09-02).**

@@ -18,11 +18,28 @@
 - [ ] **Real event detail.** Needs `GET /events/:id`, participants and polls; today it filters `GET /events/me` on the device and borrows mock panels and avatars (`toDetailEvent`). The profile tab's calendar and previous-event cards are still mock.
 - [ ] **Participant avatars on event cards**, once an event-participants endpoint exists.
 - [ ] **Notifications:** replace the mock once a table and route exist.
-- [ ] **Device test** (after `npm run ios` for `expo-image-picker`): edit profile (names, `409` username, photo upload/remove); create group → groups tab; Plan Event → create-event preselected → home Upcoming → detail.
+- [ ] **Device test:** edit profile (names, `409` username, photo upload/remove); create group → groups tab; Plan Event → create-event preselected → home Upcoming → detail.
+
+## Calendar
+
+- [ ] **`PATCH` / `DELETE /busy-blocks/:id`** (`GET` and `POST` are done; these still return `501`). These are the API's first `:id` routes:
+  - validate `:id` as a UUID
+  - decide `403` or `404` for someone else's block
+  - scope the SQL by joining `calendars.user_id`; `RETURNING` giving zero rows means no match
+  - decide `DELETE`'s success response (`204` or `200` with the block)
+- [ ] **Decide how overlapping busy blocks are handled.** Today `POST /busy-blocks` stores blocks exactly as entered, so they can overlap (e.g. 9–10 and 9:30–11, or a one-off on top of a weekly block).
+  - **Storage:** keep blocks as entered, or merge on write? The suggestion is to keep them as entered: users edit and delete the blocks they made, and one-off and weekly blocks often can't merge into one row.
+  - **Availability:** treat "busy" as the union of all blocks, computed on read.
+  - **Display:** `WeekCalendar` currently draws overlapping blocks on top of each other; decide side-by-side columns or a stacked look.
+- [ ] **Wire My Calendar to the API:** add a `busyBlocksRepo`, save from `BusyTimeSheet`, load `GET /busy-blocks/me` for the visible week, and tap a block to edit or delete it. Decide whether the server or the client expands weekly blocks (returned as rules) into dated occurrences.
+- [ ] **Device test My Calendar:** profile arrow → My Calendar; Today button on both calendars; `+` form (one time / weekly / until / errors); long-press-drag drawing vs. plain scrolling.
+- [ ] Later: the onboarding "Manually Add Calendar" button; computing group overlap; whether drawing should auto-scroll near the grid's edges; the Google Calendar import (MVP; Outlook after the MVP; plan in `decisions.md`).
 
 ## Security
 
 - [ ] **Decide RLS per table.** Tables the frontend reads directly need real policies; API-only tables can deny `anon` / `authenticated`.
+- [ ] **Baseline migration.** `supabase/migrations/` starts at `avatars_bucket`; `profiles`, `groups`, `events` and the other early tables were created before migrations were tracked, so the folder can't rebuild the database from scratch (`supabase db reset` fails). Dump the schema into an earlier-dated baseline file and mark it as applied.
+- [ ] **Turn on leaked-password protection** in Supabase Auth (security advisor WARN).
 
 ## Open product questions
 

@@ -23,7 +23,8 @@ All three use one Supabase project.
 
 ## Working norms
 
-- **In `api/`:** explain the concepts and reasoning behind a change (why this status code, why this layer, the trade-offs, the standard REST convention). Make edits directly when asked to fix or implement something.
+- **Build only when delegated.** The developer wants to take part in every building step. Propose and explain the next step, then wait. Write code, migrations or schema changes only for a step the developer explicitly hands off, and stop when that step is done. Answering design questions is not a go-ahead to implement.
+- **In `api/`:** explain the concepts and reasoning behind a change (why this status code, why this layer, the trade-offs, the standard REST convention).
 - Run `npx tsc --noEmit` in `frontend/` and `api/` after changes. Metro doesn't typecheck.
 - Always `npm install` from the repo root.
 

@@ -51,6 +51,12 @@ Metro doesn't typecheck: run `npx tsc --noEmit` in `frontend/` and `api/` after 
 - If the install layout or native config changes, regenerate it with `npx expo prebuild --clean --platform ios` rather than patching it by hand.
 
 - A new native package (e.g. `expo-image-picker`) or `app.json` config plugin makes the installed dev client stale: rebuild with `npm run ios`. Metro reloads won't pick it up.
+- **Native builds need Xcode 27.** `expo-modules-jsi` 57.0.5+ (the project has 57.1.1) annotates `RuntimeScheduler` constructors for Xcode 27. Xcode 26.x fails in the "Build ExpoModulesJSI xcframework" phase with "`RuntimeScheduler` cannot be annotated with either SWIFT_RETURNS_RETAINED…". Builds use the Xcode chosen by `xcode-select`, not the Command Line Tools version.
+- **After an Xcode upgrade:**
+  - Accept the license with `sudo xcodebuild -license accept`. Until then `xcrun` exits `69` and Expo reports "xcrun is not configured correctly".
+  - Run `sudo xcodebuild -runFirstLaunch`.
+  - Wait for any simulator runtime install to finish before building. While it runs, simulator boot fails with "XPC error talking to SimLaunchHostService".
+- If `pod install` crashes with Ruby `Encoding::CompatibilityError`, the shell needs `export LANG=en_US.UTF-8`.
 
 ## EAS Build
 
@@ -62,4 +68,5 @@ Run `eas build` from `frontend/`, where `eas.json` lives. EAS CLI detects the wo
 - `index.ts` holds the API contract, derived rather than retyped: row aliases (`Profile = Tables<'profiles'>`), enum aliases (`EventStatus = Enums<'event_status'>`) and request bodies that `Pick` only client-sendable fields (`ProfileUpdate`, `EventCreate`, `GroupCreate`). Constrained value sets use Postgres enums, since `CHECK` lists don't generate unions.
 - Type-only package: both apps `import type` it, so nothing loads it at runtime and there's no build step. npm symlinks it into `node_modules`, so edits show up immediately. The frontend never redefines these types; repositories re-export them.
 - `Row` types say timestamps are `string` (the JSON shape); inside the API, `pg` returns `Date` until `res.json()`.
+- Dry-run a migration before applying it: run its SQL plus test inserts inside one `DO` block (one statement, so all or nothing) that ends with `raise exception` carrying a PASS/FAIL report. The error rolls everything back. Each test insert sits in its own `begin … exception` block (a savepoint) and records `constraint_name` from `get stacked diagnostics`, so a test can assert *which* constraint rejected it.
 - Schema change routine: apply a migration (save it as `supabase/migrations/<version Supabase recorded>_<name>.sql`), `npm run gen:types`, typecheck both apps, commit together.
