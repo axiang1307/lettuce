@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import {getEvents} from '../controllers/events';
+import {getEvents, postEvent} from '../controllers/events';
 
 
 // custom router for each thing
@@ -8,5 +8,7 @@ import {getEvents} from '../controllers/events';
 const eventsRouter = Router();
 
 eventsRouter.get('/me', getEvents);
+
+eventsRouter.post('/', postEvent);
 
 export default eventsRouter;

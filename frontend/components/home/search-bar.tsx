@@ -36,7 +36,7 @@ export function SearchBar({ value, onChangeText, placeholder = 'Search events' }
           <MaterialIcons name="close" size={22} color="#878787" />
         </Pressable>
       ) : null}
-      <View style={styles.searchIcon} pointerEvents="none">
+      <View pointerEvents="none">
         <MaterialIcons name="search" size={26} color="#878787" />
       </View>
     </View>
@@ -52,9 +52,8 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     borderWidth: 1,
     borderColor: '#e8e8e8',
-    paddingLeft: 16,
-    paddingRight: 12,
-    minHeight: 48,
+    paddingHorizontal: 16,
+    minHeight: 50,
     shadowColor: '#000',
     shadowOpacity: 0.15,
     shadowRadius: 2,
@@ -64,16 +63,13 @@ const styles = StyleSheet.create({
   input: {
     flex: 1,
     fontSize: 18,
-    lineHeight: 24,
+    lineHeight: 27,
     color: '#131313',
-    paddingVertical: 12,
+    paddingVertical: 11,
     paddingRight: 8,
   },
   clearBtn: {
     padding: 4,
     marginRight: 4,
-  },
-  searchIcon: {
-    paddingLeft: 4,
   },
 });

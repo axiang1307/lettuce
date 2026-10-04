@@ -3,6 +3,7 @@
  import 'dotenv/config';
  import profilesRouter from './routes/profiles';
  import eventsRouter from './routes/events';
+ import groupsRouter from './routes/groups';
  import { authMiddleware } from './middleware/auth';
 
  // 1. Create the Express instance
@@ -14,6 +15,7 @@
  app.use(authMiddleware);
  app.use('/profiles', profilesRouter);
  app.use('/events', eventsRouter);
+ app.use('/groups', groupsRouter);
 
  // 3. Start listening
  app.listen(PORT, () => {

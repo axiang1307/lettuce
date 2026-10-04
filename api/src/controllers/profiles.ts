@@ -2,6 +2,13 @@ import { Request, Response } from "express";
 import { getMe as serviceGetMe, patchMe as servicePatchMe } from '../services/profiles';
 import type { ProfileUpdate } from '@lettuce/api-types';
 
+// "<userId>/<name>.<ext>": one folder level, and a filename with no slashes or ".." segments
+const AVATAR_FILE = /^[A-Za-z0-9_-]+\.[A-Za-z0-9]+$/;
+const isOwnAvatarPath = (path: string, userId: string) => {
+    const [folder, file, ...rest] = path.split('/');
+    return folder === userId && file !== undefined && rest.length === 0 && AVATAR_FILE.test(file);
+}
+
 export const getMe = async (req: Request, res: Response) => {//get function for profile
     if (!req.user) {
         return res.status(401).json(
@@ -76,6 +83,10 @@ export const patchMe = async (req: Request, res: Response) => {
         const { avatar_url } = req.body;
         if (avatar_url !== null && typeof avatar_url !== 'string') {
             return res.status(400).json({ error: 'avatar_url must be a string or null' });
+        }
+        // avatar_url is an object path in the `avatars` bucket, and it must sit in the caller's own folder
+        if (typeof avatar_url === 'string' && !isOwnAvatarPath(avatar_url, req.user.id)) {
+            return res.status(400).json({ error: 'avatar_url must be a path of the form <your user id>/<file>' });
         }
         update.avatar_url = avatar_url;
     }

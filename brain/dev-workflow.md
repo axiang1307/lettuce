@@ -57,6 +57,10 @@ Both should pass clean.
 - Its Pods point at root `node_modules` paths.
 - If the install layout or native config changes, regenerate it with `npx expo prebuild --clean --platform ios` rather than patching it by hand.
 
+## Native modules
+
+Adding a package with native code (e.g. `expo-image-picker`) or a config plugin in `app.json` means the installed dev client is stale. Rebuild with `npm run ios` (and `npx expo prebuild --clean --platform ios` if the native project gets out of sync). Metro reloads alone won't pick it up.
+
 ## EAS Build
 
 Run `eas build` from `frontend/`, where `eas.json` lives. EAS CLI detects the workspace root and uploads the whole repo; no monorepo-specific config is needed.
@@ -64,4 +68,4 @@ Run `eas build` from `frontend/`, where `eas.json` lives. EAS CLI detects the wo
 ## Shared types
 
 - Edit `packages/api-types/*.ts` directly; there is no build step.
-- Regenerate `packages/api-types/database.ts` with the Supabase CLI when the schema changes.
+- After a schema change (migration applied), run `npm run gen:types` from the root. It runs `supabase gen types typescript --linked` (the repo is linked via `supabase/.temp/project-ref`) into `packages/api-types/database.ts`. Then typecheck both apps and commit the migration and the regenerated types together.

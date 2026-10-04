@@ -37,30 +37,14 @@ Shared clients are created once at import time: `src/lib/db.ts` (pg `Pool`) and 
 
 ## Endpoints
 
-### `GET /profiles/me`
-Returns the caller's `profiles` row.
-
-### `PATCH /profiles/me`
-Updates the caller's profile.
-- Editable fields (allow-list): `full_name`, `username`, `avatar_url`.
-- The update object is built only from allow-listed keys. Unknown keys, including `id` and `created_at`, are silently ignored.
-- A missing body (`undefined`, e.g. when the request isn't JSON) or `{}` → `400`.
-- No allow-listed keys present → `400`.
-- Each field must be a string or `null`. `null` clears the field.
-- `full_name: ""` → `400`.
-- `username` is trimmed; if it's empty after trimming → `400`.
-- Username taken (Postgres `23505`) → `409`.
-- Returns the updated row (`RETURNING *`).
-
-### `GET /events/me`
-Returns events the caller participates in. It looks up `event_participants.user_id = caller`, then fetches `events` with `id = ANY(ids)`. Returns `[]` if there are none.
+The full route reference (methods, bodies, validation, status codes, response shapes, curl examples) lives in `brain/endpoints.md`.
 
 ## `profiles` table
 
 | Column | Notes |
 |---|---|
 | `id` | equals `auth.users.id`; system-set |
-| `full_name`, `username`, `avatar_url` | user-editable |
+| `full_name`, `username`, `avatar_url` | user-editable; `avatar_url` is a Storage object path, not a URL (see `brain/architecture.md`) |
 | `created_at` | system-set |
 
 Rows are meant to be created by a trigger on `auth.users` at signup, so the API never creates profiles.
@@ -75,11 +59,14 @@ Rows are meant to be created by a trigger on `auth.users` at signup, so the API 
   | `200` | success |
   | `400` | bad input |
   | `401` | auth failure (middleware or controller guard) |
+  | `403` | signed in, but not allowed (`ForbiddenError`, e.g. not a group member) |
   | `404` | defensive missing row |
   | `409` | unique-constraint conflict |
   | `500` | unexpected database or server error |
 
 - **How `pg` reports errors:** it **throws** on query errors, and Postgres error codes such as `23505` are on `error.code`. A query that matches nothing is not an error; it returns empty `rows`. The db layer returns `rows[0] ?? null`, and the controller turns `null` into `404`.
+- **Domain errors from services:** a service that refuses a request throws a class from `src/lib/errors.ts` (currently `ForbiddenError`). The service says *what* went wrong; the controller checks `instanceof` in its `catch` and picks the status code (`ForbiddenError` → `403`). Services never set HTTP statuses themselves.
+- **Shared access checks** live in the db layer of the resource they're about, e.g. `isMember(groupId, userId)` in `src/db/groups.ts`, used by the events service.
 - **Catching errors:** controllers wrap service calls in `try/catch`. There is no Express error-handling middleware, so an uncaught error would return an HTML stack trace instead of `{ error }`.
 
 ## Environment (`api/.env`)

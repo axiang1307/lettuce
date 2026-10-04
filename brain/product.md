@@ -19,7 +19,9 @@ Users form **groups** with other users. Inside a group they create **events**. E
 - v1: `profiles`, `groups`, `group_members`, `events`, `event_attendees`, `notifications`
 - after v1: `polls`, `poll_options`, `poll_votes`, `activity_suggestions`
 
-Tables that exist in Supabase today: `profiles`, `events`, `event_participants`, `groups`, `polls`.
+Tables that exist in Supabase today: `profiles`, `groups`, `group_memberships`, `events` (each in exactly one group, via `events.group_id`), `event_participants`, `polls`, `poll_options`, `poll_votes`.
+
+The MVP flow is **group-first**: events are only created inside a group (see `brain/decisions.md`).
 
 ## Non-goals (for now)
 
