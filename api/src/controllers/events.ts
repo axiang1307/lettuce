@@ -9,14 +9,14 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const optionalText = (value: unknown) =>
     typeof value === 'string' && value.trim() !== '' ? value.trim() : null;
 
-export const getEvents = async (req: Request, res: Response) => {//get function for profile
+export const getEvents = async (req: Request, res: Response) => {//get function for events
     if (!req.user) {
         return res.status(401).json(
             {
                 error: 'Unauthorized User'
             }
         );
-    }
+    } // the middleware already handles authentication and runs on every request so mostly for type sanity for ts
     try{
         const data = await serviceGetEvents(req.user.id);
         return res.status(200).json(data);
