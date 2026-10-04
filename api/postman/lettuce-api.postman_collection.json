@@ -1,0 +1,1590 @@
+{
+  "info": {
+    "_postman_id": "6f3d0d52-3a8e-4f43-9d1e-4c1f7b2a9e10",
+    "name": "Lettuce API",
+    "description": "Black-box tests for the Lettuce Express API (api/). Status tables: brain/endpoints.md.\n\nRun the whole collection top to bottom: \"Auth / Sign in\" refreshes the token, and later folders use ids saved by earlier ones (Events needs group_id from Groups).\n\nRuns against the real Supabase project as the test user, so each run creates one group, one event and two busy blocks.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{access_token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "event": [
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Runs after every request. API errors must use the { error: string } contract (brain/api.md).",
+          "// Supabase Auth's own errors have a different shape, so the sign-in request is skipped.",
+          "if (pm.response.code >= 400 && !pm.request.url.getPath().startsWith(\"/auth/v1/\")) {",
+          "  pm.test(\"error body is { error: string }\", () => pm.expect(pm.response.json().error).to.be.a(\"string\"));",
+          "}"
+        ]
+      }
+    }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Sign in",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 200\", () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.environment.set(\"access_token\", body.access_token);",
+                  "pm.environment.set(\"user_id\", body.user.id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "auth": {
+              "type": "noauth"
+            },
+            "description": "Signs the test user in through Supabase Auth and saves the access token. Every request below inherits it from the collection's Bearer auth.",
+            "header": [
+              {
+                "key": "apikey",
+                "value": "{{anon_key}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{test_email}}\",\n  \"password\": \"{{test_password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{supabase_url}}/auth/v1/token?grant_type=password",
+              "host": [
+                "{{supabase_url}}"
+              ],
+              "path": [
+                "auth",
+                "v1",
+                "token"
+              ],
+              "query": [
+                {
+                  "key": "grant_type",
+                  "value": "password"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Profiles",
+      "item": [
+        {
+          "name": "200 returns caller profile",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 200\", () => pm.response.to.have.status(200));",
+                  "",
+                  "pm.test(\"returns the caller's own profile\", () => {",
+                  "  pm.expect(pm.response.json().id).to.eql(pm.environment.get(\"user_id\"));",
+                  "});",
+                  "",
+                  "pm.test(\"body has exactly the Profile fields\", () => {",
+                  "  pm.expect(pm.response.json()).to.have.all.keys(\"id\", \"username\", \"full_name\", \"avatar_url\", \"created_at\");",
+                  "});",
+                  "",
+                  "// The PATCH request below sends these values back, so the run leaves the profile unchanged.",
+                  "pm.environment.set(\"profile\", JSON.stringify(pm.response.json()));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/profiles/me",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "profiles",
+                "me"
+              ]
+            }
+          }
+        },
+        {
+          "name": "401 no token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 401\", () => pm.response.to.have.status(401));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/profiles/me",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "profiles",
+                "me"
+              ]
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          }
+        },
+        {
+          "name": "401 invalid token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 401\", () => pm.response.to.have.status(401));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/profiles/me",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "profiles",
+                "me"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "not-a-real-token",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "200 updates profile (no-op, trims username)",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Built from the profile saved by \"200 returns caller profile\".",
+                  "const p = JSON.parse(pm.environment.get(\"profile\"));",
+                  "const body = { full_name: p.full_name };",
+                  "if (p.username) body.username = \"  \" + p.username + \"  \";",
+                  "pm.variables.set(\"patch_body\", JSON.stringify(body));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 200\", () => pm.response.to.have.status(200));",
+                  "",
+                  "const before = JSON.parse(pm.environment.get(\"profile\"));",
+                  "const after = pm.response.json();",
+                  "",
+                  "pm.test(\"updates the caller's own profile\", () => pm.expect(after.id).to.eql(pm.environment.get(\"user_id\")));",
+                  "pm.test(\"full_name is unchanged\", () => pm.expect(after.full_name).to.eql(before.full_name));",
+                  "pm.test(\"username is trimmed\", () => pm.expect(after.username).to.eql(before.username));",
+                  "pm.test(\"body has exactly the Profile fields\", () => pm.expect(after).to.have.all.keys(\"id\", \"username\", \"full_name\", \"avatar_url\", \"created_at\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/profiles/me",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "profiles",
+                "me"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{{patch_body}}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Sends the profile's current full_name and username back (username padded with spaces), so the update path runs without changing the test user."
+          }
+        },
+        {
+          "name": "400 empty body",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/profiles/me",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "profiles",
+                "me"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "400 no editable fields",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/profiles/me",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "profiles",
+                "me"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id\": \"00000000-0000-0000-0000-000000000000\",\n  \"created_at\": \"2020-01-01\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "id and created_at are ignored, so nothing is left to update."
+          }
+        },
+        {
+          "name": "400 blank username",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/profiles/me",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "profiles",
+                "me"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"   \"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "400 full_name wrong type",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/profiles/me",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "profiles",
+                "me"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"full_name\": 5\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "400 avatar_url outside caller folder",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/profiles/me",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "profiles",
+                "me"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"avatar_url\": \"someone-else/photo.jpg\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Groups",
+      "item": [
+        {
+          "name": "201 creates group",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 201\", () => pm.response.to.have.status(201));",
+                  "",
+                  "const group = pm.response.json();",
+                  "pm.environment.set(\"group_id\", group.id);",
+                  "",
+                  "pm.test(\"caller is the creator\", () => pm.expect(group.created_by).to.eql(pm.environment.get(\"user_id\")));",
+                  "pm.test(\"name is trimmed\", () => pm.expect(group.name).to.eql(\"Postman group\"));",
+                  "pm.test(\"blank description is stored as null\", () => pm.expect(group.description).to.be.null);",
+                  "pm.test(\"not archived\", () => pm.expect(group.archived_at).to.be.null);",
+                  "pm.test(\"body has exactly the Group fields\", () => pm.expect(group).to.have.all.keys(\"id\", \"name\", \"description\", \"created_by\", \"created_at\", \"archived_at\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/groups",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "groups"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"  Postman group  \",\n  \"description\": \"   \"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Creates a real group for the test user on every run. Saves group_id for the Events folder."
+          }
+        },
+        {
+          "name": "200 lists caller groups",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 200\", () => pm.response.to.have.status(200));",
+                  "",
+                  "const groups = pm.response.json();",
+                  "pm.test(\"returns an array\", () => pm.expect(groups).to.be.an(\"array\"));",
+                  "pm.test(\"includes the group just created\", () => {",
+                  "  pm.expect(groups.map((g) => g.id)).to.include(pm.environment.get(\"group_id\"));",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/groups/me",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "groups",
+                "me"
+              ]
+            }
+          }
+        },
+        {
+          "name": "400 empty body",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/groups",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "groups"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "400 blank name",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/groups",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "groups"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"   \"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "400 name wrong type",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/groups",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "groups"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": 5\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "400 description wrong type",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/groups",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "groups"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Postman group\",\n  \"description\": 5\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Events",
+      "item": [
+        {
+          "name": "201 creates event",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 201\", () => pm.response.to.have.status(201));",
+                  "",
+                  "const event = pm.response.json();",
+                  "pm.environment.set(\"event_id\", event.id);",
+                  "",
+                  "pm.test(\"caller is the creator\", () => pm.expect(event.created_by).to.eql(pm.environment.get(\"user_id\")));",
+                  "pm.test(\"in the requested group\", () => pm.expect(event.group_id).to.eql(pm.environment.get(\"group_id\")));",
+                  "pm.test(\"title is trimmed\", () => pm.expect(event.title).to.eql(\"Postman event\"));",
+                  "pm.test(\"blank final_location and missing description are null\", () => {",
+                  "  pm.expect(event.final_location).to.be.null;",
+                  "  pm.expect(event.description).to.be.null;",
+                  "});",
+                  "pm.test(\"starts in planning with no final time\", () => {",
+                  "  pm.expect(event.status).to.eql(\"planning\");",
+                  "  pm.expect(event.final_starts_at).to.be.null;",
+                  "  pm.expect(event.final_ends_at).to.be.null;",
+                  "});",
+                  "pm.test(\"body has exactly the Event fields\", () => pm.expect(event).to.have.all.keys(\"id\", \"group_id\", \"title\", \"description\", \"final_location\", \"final_starts_at\", \"final_ends_at\", \"status\", \"created_by\", \"created_at\", \"updated_at\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/events",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "events"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"group_id\": \"{{group_id}}\",\n  \"title\": \"  Postman event  \",\n  \"final_location\": \"   \"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Uses the group from \"Groups / 201 creates group\", so run the Groups folder first. Creates a real event on every run."
+          }
+        },
+        {
+          "name": "200 lists caller events",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 200\", () => pm.response.to.have.status(200));",
+                  "",
+                  "const events = pm.response.json();",
+                  "pm.test(\"returns an array\", () => pm.expect(events).to.be.an(\"array\"));",
+                  "pm.test(\"includes the event just created\", () => {",
+                  "  pm.expect(events.map((e) => e.id)).to.include(pm.environment.get(\"event_id\"));",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/events/me",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "events",
+                "me"
+              ]
+            }
+          }
+        },
+        {
+          "name": "403 not a member of group",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 403\", () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/events",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "events"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"group_id\": \"{{$randomUUID}}\",\n  \"title\": \"Postman event\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "A random UUID is a group the caller isn't in (it almost certainly doesn't exist either; that's 403 too)."
+          }
+        },
+        {
+          "name": "400 empty body",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/events",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "events"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "400 group_id not a UUID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/events",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "events"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"group_id\": \"not-a-uuid\",\n  \"title\": \"Postman event\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "400 blank title",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/events",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "events"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"group_id\": \"{{group_id}}\",\n  \"title\": \"   \"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "400 final_location wrong type",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/events",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "events"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"group_id\": \"{{group_id}}\",\n  \"title\": \"Postman event\",\n  \"final_location\": 5\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Busy blocks",
+      "item": [
+        {
+          "name": "201 creates one-off block",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 201\", () => pm.response.to.have.status(201));",
+                  "",
+                  "const block = pm.response.json();",
+                  "pm.environment.set(\"one_off_block_id\", block.id);",
+                  "",
+                  "pm.test(\"times come back as HH:MM:SS\", () => {",
+                  "  pm.expect(block.start_time).to.eql(\"09:00:00\");",
+                  "  pm.expect(block.end_time).to.eql(\"10:30:00\");",
+                  "});",
+                  "pm.test(\"one-off: no repeat_days, no end_date\", () => {",
+                  "  pm.expect(block.repeat_days).to.be.null;",
+                  "  pm.expect(block.end_date).to.be.null;",
+                  "});",
+                  "pm.test(\"start_date comes back as YYYY-MM-DD\", () => pm.expect(block.start_date).to.eql(\"2026-10-05\"));",
+                  "pm.test(\"body has exactly the BusyBlock fields\", () => pm.expect(block).to.have.all.keys(\"id\", \"calendar_id\", \"start_date\", \"end_date\", \"start_time\", \"end_time\", \"repeat_days\", \"timezone\", \"created_at\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/busy-blocks",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "busy-blocks"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"start_date\": \"2026-10-05\",\n  \"start_time\": \"09:00\",\n  \"end_time\": \"10:30\",\n  \"timezone\": \"America/New_York\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Adds a real block to the test user's manual calendar on every run."
+          }
+        },
+        {
+          "name": "201 creates weekly block",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 201\", () => pm.response.to.have.status(201));",
+                  "",
+                  "const block = pm.response.json();",
+                  "pm.environment.set(\"weekly_block_id\", block.id);",
+                  "",
+                  "pm.test(\"repeat_days are deduplicated and sorted\", () => pm.expect(block.repeat_days).to.eql([1, 3]));",
+                  "pm.test(\"end_date comes back as YYYY-MM-DD\", () => pm.expect(block.end_date).to.eql(\"2026-12-31\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/busy-blocks",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "busy-blocks"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"start_date\": \"2026-10-05\",\n  \"start_time\": \"18:00\",\n  \"end_time\": \"19:00\",\n  \"repeat_days\": [\n    3,\n    1,\n    3\n  ],\n  \"end_date\": \"2026-12-31\",\n  \"timezone\": \"America/New_York\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "200 lists caller blocks in range",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 200\", () => pm.response.to.have.status(200));",
+                  "",
+                  "const ids = pm.response.json().map((b) => b.id);",
+                  "pm.test(\"includes the one-off block just created\", () => pm.expect(ids).to.include(pm.environment.get(\"one_off_block_id\")));",
+                  "pm.test(\"includes the weekly block just created\", () => pm.expect(ids).to.include(pm.environment.get(\"weekly_block_id\")));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/busy-blocks/me?from=2026-10-05&to=2026-10-11",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "busy-blocks",
+                "me"
+              ],
+              "query": [
+                {
+                  "key": "from",
+                  "value": "2026-10-05"
+                },
+                {
+                  "key": "to",
+                  "value": "2026-10-11"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "200 range before both blocks excludes them",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 200\", () => pm.response.to.have.status(200));",
+                  "",
+                  "const ids = pm.response.json().map((b) => b.id);",
+                  "pm.test(\"excludes the blocks just created\", () => {",
+                  "  pm.expect(ids).to.not.include(pm.environment.get(\"one_off_block_id\"));",
+                  "  pm.expect(ids).to.not.include(pm.environment.get(\"weekly_block_id\"));",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/busy-blocks/me?from=2026-09-01&to=2026-09-30",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "busy-blocks",
+                "me"
+              ],
+              "query": [
+                {
+                  "key": "from",
+                  "value": "2026-09-01"
+                },
+                {
+                  "key": "to",
+                  "value": "2026-09-30"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "400 GET missing from and to",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/busy-blocks/me",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "busy-blocks",
+                "me"
+              ]
+            }
+          }
+        },
+        {
+          "name": "400 GET from after to",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/busy-blocks/me?from=2026-10-11&to=2026-10-05",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "busy-blocks",
+                "me"
+              ],
+              "query": [
+                {
+                  "key": "from",
+                  "value": "2026-10-11"
+                },
+                {
+                  "key": "to",
+                  "value": "2026-10-05"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "400 GET impossible date",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/busy-blocks/me?from=2026-02-30&to=2026-03-05",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "busy-blocks",
+                "me"
+              ],
+              "query": [
+                {
+                  "key": "from",
+                  "value": "2026-02-30"
+                },
+                {
+                  "key": "to",
+                  "value": "2026-03-05"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "400 POST empty body",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/busy-blocks",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "busy-blocks"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "400 POST impossible start_date",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/busy-blocks",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "busy-blocks"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"start_date\": \"2026-02-30\",\n  \"start_time\": \"09:00\",\n  \"end_time\": \"10:00\",\n  \"timezone\": \"America/New_York\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "400 POST end_time not after start_time",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/busy-blocks",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "busy-blocks"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"start_date\": \"2026-10-05\",\n  \"start_time\": \"10:00\",\n  \"end_time\": \"09:00\",\n  \"timezone\": \"America/New_York\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "400 POST repeat_days out of range",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/busy-blocks",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "busy-blocks"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"start_date\": \"2026-10-05\",\n  \"start_time\": \"09:00\",\n  \"end_time\": \"10:00\",\n  \"repeat_days\": [\n    7\n  ],\n  \"timezone\": \"America/New_York\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "400 POST end_date on one-off block",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/busy-blocks",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "busy-blocks"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"start_date\": \"2026-10-05\",\n  \"start_time\": \"09:00\",\n  \"end_time\": \"10:00\",\n  \"end_date\": \"2026-12-31\",\n  \"timezone\": \"America/New_York\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "400 POST unknown timezone",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/busy-blocks",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "busy-blocks"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"start_date\": \"2026-10-05\",\n  \"start_time\": \"09:00\",\n  \"end_time\": \"10:00\",\n  \"timezone\": \"Mars/Olympus\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
