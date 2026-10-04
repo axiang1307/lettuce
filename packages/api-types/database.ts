@@ -14,6 +14,79 @@ export type Database = {
   }
   public: {
     Tables: {
+      busy_blocks: {
+        Row: {
+          calendar_id: string
+          created_at: string
+          end_date: string | null
+          end_time: string
+          id: string
+          repeat_days: number[] | null
+          start_date: string
+          start_time: string
+          timezone: string
+        }
+        Insert: {
+          calendar_id: string
+          created_at?: string
+          end_date?: string | null
+          end_time: string
+          id?: string
+          repeat_days?: number[] | null
+          start_date: string
+          start_time: string
+          timezone: string
+        }
+        Update: {
+          calendar_id?: string
+          created_at?: string
+          end_date?: string | null
+          end_time?: string
+          id?: string
+          repeat_days?: number[] | null
+          start_date?: string
+          start_time?: string
+          timezone?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "busy_blocks_calendar_id_fkey"
+            columns: ["calendar_id"]
+            isOneToOne: false
+            referencedRelation: "calendars"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      calendars: {
+        Row: {
+          created_at: string
+          id: string
+          source: Database["public"]["Enums"]["calendar_source"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          source?: Database["public"]["Enums"]["calendar_source"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          source?: Database["public"]["Enums"]["calendar_source"]
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "calendars_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       event_participants: {
         Row: {
           added_at: string
@@ -345,6 +418,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
+      calendar_source: "manual" | "google" | "outlook"
       event_status: "planning" | "upcoming" | "in_progress" | "done"
     }
     CompositeTypes: {
@@ -473,6 +547,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      calendar_source: ["manual", "google", "outlook"],
       event_status: ["planning", "upcoming", "in_progress", "done"],
     },
   },

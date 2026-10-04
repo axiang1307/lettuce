@@ -1,27 +1,20 @@
 import React, { useState, useMemo } from 'react';
-import { View, Text, StyleSheet, Pressable, ImageBackground, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, Pressable, ImageBackground } from 'react-native';
 import BottomSheet, { BottomSheetView } from '@gorhom/bottom-sheet';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { WeekCalendar, weekStartFor, type WeekCalendarBlock } from '@/components/calendar/week-calendar';
 import { ParticipantsProfiles } from '@/components/home/participants-profiles';
 import type { HomeFeedEvent } from '@/data/home-feed';
-const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October',
-  'November', 'December'];
-const dow = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
-const hours = ['8 AM', '9 AM', '10 AM', '11 AM', '12 PM',
-                '1 PM', '2 PM', '3 PM', '4 PM', '5 PM',
-                '6 PM', '7 PM', '8 PM', '9 PM', '10 PM',
-];
-const ROW_H = 59;
-const TIME_COL_RATIO = 64 / 402;
 
-function parseBlock(label: string, timeRange: string) {
+/** Turns a mock option like ("Sunday, 12/07", "1-3pm") into a grid block. */
+function parseBlock(id: string, label: string, timeRange: string): WeekCalendarBlock {
   const dayMap: Record<string, number> = {
     sunday: 0, monday: 1, tuesday: 2, wednesday: 3,
     thursday: 4, friday: 5, saturday: 6,
   };
-  const col = dayMap[label.split(',')[0].trim().toLowerCase()] ?? -1;
+  const day = dayMap[label.split(',')[0].trim().toLowerCase()] ?? -1;
   const parseHour = (s: string) => {
     const isPM = s.toLowerCase().includes('pm');
     const n = parseInt(s.replace(/[^0-9]/g, ''), 10);
@@ -33,7 +26,7 @@ function parseBlock(label: string, timeRange: string) {
   const suffix = endStr.toLowerCase().includes('am') ? 'AM' : 'PM';
   const startHour = parseHour(startStr.includes('M') ? startStr : startStr + suffix);
   const endHour = parseHour(endStr);
-  return { col, top: (startHour - 8) * ROW_H, height: (endHour - startHour) * ROW_H };
+  return { id, day, startHour, endHour };
 }
 
 type CalendarPanelProps = {
@@ -48,28 +41,12 @@ export function CalendarPanel({ event, onBack, onSendToPoll }: CalendarPanelProp
     const [selectedId, setSelectedId] = useState<string | undefined>(
         event.calendar.selectedOptionId ?? event.calendar.options[0]?.id,
     );
-    const [gridWidth, setGridWidth] = useState(0);
-    const timeColW = gridWidth * TIME_COL_RATIO;
-    const cellW = (gridWidth - timeColW) / 7;
     const blocks = useMemo(
-        () => event.calendar.options.map((o) => ({ ...o, ...parseBlock(o.label, o.timeRange) })),
+        () => event.calendar.options.map((o) => parseBlock(o.id, o.label, o.timeRange)),
         [event.calendar.options],
     );
+    const weekStart = weekStartFor(week);
 
-    const now = new Date();                                                                                           
-    const dayOfMonth = now.getDate();                                                                                 
-    const dayOfWeek = now.getDay();
-    const dayNums = Array.from({length: 7}, (_, i) => {                                                              
-        const d = new Date(now);
-        d.setDate(dayOfMonth - dayOfWeek + i + week * 7);                                                                    
-        return d.getDate();
-    });
-    const weekStart = new Date(now);                                                                                  
-    weekStart.setDate(dayOfMonth - dayOfWeek + week * 7);
-    const newMonth = weekStart.getMonth();                                                                           
-    const year = weekStart.getFullYear();
-
-    
     return (
         //safeareaview instead of view so that the text shows
         <GestureHandlerRootView style = {{ flex: 1 }}>
@@ -91,101 +68,14 @@ export function CalendarPanel({ event, onBack, onSendToPoll }: CalendarPanelProp
                         <ParticipantsProfiles avatars={event.participants.avatars} moreCount={event.participants.moreCount ?? 0}/>
                     </View>
                 </ImageBackground>
-                <View style = {styles.calendar} onLayout={(e) => setGridWidth(e.nativeEvent.layout.width)}>
-                    <View style = {styles.monthHeader}>
-                        <Text style = {{
-                            flex: 147,
-                            fontSize: 18, 
-                            fontFamily: 'Montserrat_600SemiBold', 
-                            fontWeight: '600', 
-                            lineHeight: 23.40, 
-                            }}
-                        >
-                            {`${months[newMonth]} ${year}`}
-                        </Text>
-                        <Pressable onPress={() => setWeek(week-1)}>
-                            <Ionicons name = "chevron-back" size = {28}/>
-                        </Pressable>
-                        <Pressable onPress={() => setWeek(week+1)}>
-                            <Ionicons name = "chevron-forward" size = {28}/>
-                        </Pressable>
-                    </View>
-                    <View style = {styles.dateHeader}>
-                        <View style = {{
-                            width: timeColW,
-                            backgroundColor: '#ffffff'
-                        }}/>
-                        <View style = {{
-                            flex: 1,
-                            flexDirection: 'row',
-                            paddingTop: 8,
-                            paddingRight: 8,
-                            justifyContent: 'space-between',
-                            alignContent: 'center',
-                        }}>
-                            {dayNums.map((day, index) => {
-                                const isToday = week ===0 && index === dayOfWeek;
-                                return(
-                                <View key={index} style = {{
-                                    flex: 1,
-                                    alignItems: 'center',
-
-                                }}>
-                                    <Text style = {{color: '#878787', fontSize: 12, fontFamily: 'DMSans_400Regular', fontWeight: '400', lineHeight: 18}}>
-                                        {dow[index]}
-                                    </Text>
-                                    <View style = {isToday ? styles.circle: null}>
-                                    <Text style = {styles.circledSingle}
-                                    >
-                                    {day}
-                                    </Text>
-                                    </View>
-                                </View>
-                                );
-                            })}
-                        </View>
-                    </View>
-                    <View style = {styles.times}>
-                        <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
-                            <View style={{ position: 'relative' }}>
-                                {hours.map((hour, index) => (
-                                    <View key={index} style={{ flexDirection: 'row' }}>
-                                        <View style={[styles.hourbox, { width: timeColW }]}>
-                                            <Text style={{ color: '#878787', fontSize: 12, fontFamily: 'DMSans_400Regular', fontWeight: '400', lineHeight: 18 }}>{hour}</Text>
-                                        </View>
-                                        {dayNums.map((day, i) => (
-                                            <View key={i} style={{
-                                                width: cellW,
-                                                borderLeftWidth: 1,
-                                                borderLeftColor: '#dbdbdb',
-                                                borderBottomWidth: 1,
-                                                borderBottomColor: '#dbdbdb',
-                                            }} />
-                                        ))}
-                                    </View>
-                                ))}
-                                {gridWidth > 0 && blocks.map((b) =>
-                                    b.col >= 0 && b.height > 0 ? (
-                                        <Pressable
-                                            key={b.id}
-                                            onPress={() => setSelectedId(b.id)}
-                                            style={[
-                                                styles.block,
-                                                {
-                                                    top: b.top,
-                                                    height: b.height,
-                                                    left: timeColW + b.col * cellW,
-                                                    width: cellW,
-                                                },
-                                                b.id === selectedId && styles.blockSelected,
-                                            ]}
-                                        />
-                                    ) : null
-                                )}
-                            </View>
-                        </ScrollView>
-                    </View>
-                </View>
+                <WeekCalendar
+                    week={week}
+                    onWeekChange={setWeek}
+                    blocks={blocks}
+                    selectedId={selectedId}
+                    onBlockPress={setSelectedId}
+                    style={styles.calendar}
+                />
                 <View>
                     <Pressable style={styles.bigButton}>                                                                                                        
                         <Ionicons name="add" size={25} color="#131313" />
@@ -308,11 +198,6 @@ const styles = StyleSheet.create({
     },
     calendar:{
         flex: 626,
-        // alignItems: 'center',
-        // justifyContent: 'center',
-        width: '100%',
-        borderTopLeftRadius: 20,                                                                                          
-        borderTopRightRadius: 20,
     },
     arrow:{
         width: '100%',
@@ -327,52 +212,7 @@ const styles = StyleSheet.create({
     },
     profiles:{
         paddingBottom: 8,
-    },
-    monthHeader:{
-        flex: 72,
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        backgroundColor: '#ffffff',
-        paddingHorizontal: 24,
-        // paddingVertical: 24,
-        width: '100%',
-        borderTopLeftRadius: 20,                                                                                          
-        borderTopRightRadius: 20,
-    },
-    dateHeader:{
-        flex: 78,
-        flexDirection: 'row',
-        backgroundColor: '#ffffff',
-        width: '100%',
-        borderTopWidth: 1,
-        borderTopColor: '#dbdbdb',
-        borderBottomWidth: 1,
-        borderBottomColor: '#dbdbdb',
-    },
-    times:{
-        flex: 476,
-    },
-    circle: {                                                                                                         
-      backgroundColor: '#8CB3D4',
-      borderRadius: 50,       
     },     
-    hourbox: {
-        height: 59,
-        paddingTop: 9,
-        paddingLeft: 8,
-        paddingBottom: 32,
-        borderBottomWidth: 1,
-        borderBottomColor: '#dbdbdb',
-    },
-    circledSingle: {
-        fontSize: 17, 
-        fontFamily: 'Montserrat_600SemiBold', 
-        fontWeight: '600', 
-        lineHeight: 23.40, 
-                paddingHorizontal: 9,
-        paddingVertical: 4.5,
-    },
     bottomsheet: {
         flex: 1,
         paddingTop: 10,
@@ -422,17 +262,6 @@ const styles = StyleSheet.create({
         shadowRadius: 2,                                                                                           
         shadowOffset: { width: 0, height: 2 },                                                                     
         elevation: 2,  
-    },
-    block: {
-        position: 'absolute',
-        backgroundColor: '#b6cfe3',
-        borderRadius: 6,
-        opacity: 0.85,
-    },
-    blockSelected: {
-        opacity: 1,
-        borderWidth: 2,
-        borderColor: '#6096c3',
     },
     bigButton: {
         width: 48,

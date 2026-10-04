@@ -4,6 +4,7 @@
  import profilesRouter from './routes/profiles';
  import eventsRouter from './routes/events';
  import groupsRouter from './routes/groups';
+ import busyBlocksRouter from './routes/busy-blocks';
  import { authMiddleware } from './middleware/auth';
 
  // 1. Create the Express instance
@@ -16,6 +17,7 @@
  app.use('/profiles', profilesRouter);
  app.use('/events', eventsRouter);
  app.use('/groups', groupsRouter);
+ app.use('/busy-blocks', busyBlocksRouter);
 
  // 3. Start listening
  app.listen(PORT, () => {

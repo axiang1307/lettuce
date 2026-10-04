@@ -156,7 +156,12 @@ export default function ProfileTab() {
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Your Calendar:</Text>
-            <MaterialIcons name="arrow-forward" size={22} color="#131313" />
+            <Pressable
+              onPress={() => router.push('/my-calendar' as Href)}
+              hitSlop={8}
+              style={({ pressed }) => [pressed && styles.pressed]}>
+              <MaterialIcons name="arrow-forward" size={22} color="#131313" />
+            </Pressable>
           </View>
 
           <View style={styles.calendarCard}>
