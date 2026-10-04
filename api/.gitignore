@@ -3,3 +3,5 @@ node_modules/
 dist/
 CLAUDE.md
 
+# Postman environment exports can hold secrets; only the .example template is committed
+postman/*.postman_environment.json

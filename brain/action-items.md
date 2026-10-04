@@ -3,7 +3,9 @@
 ## API
 
 - [ ] **Backfill `profiles` for existing auth users.** The `on_auth_user_created` trigger works, but 12 older `auth.users` rows (as of 2026-10-03) have no profile, so they get `404` from `/profiles/me` and `500` (FK `23503`) when creating groups or events.
-- [ ] **Revoke `EXECUTE` on `public.handle_new_user()` from `anon` and `authenticated`.** The security advisor flags it as callable via `/rest/v1/rpc`; the trigger doesn't need the grant.
+- [ ] **Revoke `EXECUTE` on `public.handle_new_user()` from `anon` and `authenticated`.** The security advisor flags it as callable via `/rest/v1/rpc`; the trigger doesn't need the grant. The baseline migration reproduces the grant, so revoke it in a new migration.
+- [ ] **`handle_new_user()` stores `full_name = ''`** when signup sends no name metadata (its fallback joins the `first_name` and `last_name` metadata and trims, giving `''`), but `PATCH /profiles/me` rejects `''`. Decide whether the trigger should store `NULL` instead.
+- [ ] **Postman gaps:** no requests yet for `409` username taken (needs a second user) or the profile `404` (needs a user without a profile).
 - [ ] **Groups:** `POST /groups/:id/members` (first `:id` route and role check: only `owner` / `admin` add; decide how users find each other, e.g. by username). Decide whether `GET /groups/me` hides archived groups and returns the caller's `role`.
 - [ ] **Events:** `GET /events/:id` (participant check), list events per group (membership check). Decide whether `POST /events` adds every group member as a `pending` participant (today only the creator, as `yes`).
 - [ ] **Decide `ON DELETE` for `events.group_id`** (`CASCADE` or `RESTRICT`; currently the default `NO ACTION`). `groups.archived_at` suggests archiving over deleting.
@@ -38,7 +40,6 @@
 ## Security
 
 - [ ] **Decide RLS per table.** Tables the frontend reads directly need real policies; API-only tables can deny `anon` / `authenticated`.
-- [ ] **Baseline migration.** `supabase/migrations/` starts at `avatars_bucket`; `profiles`, `groups`, `events` and the other early tables were created before migrations were tracked, so the folder can't rebuild the database from scratch (`supabase db reset` fails). Dump the schema into an earlier-dated baseline file and mark it as applied.
 - [ ] **Turn on leaked-password protection** in Supabase Auth (security advisor WARN).
 
 ## Open product questions

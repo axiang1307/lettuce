@@ -9,7 +9,7 @@
 
  // 1. Create the Express instance
  const app = express();
- const PORT = 3000;
+ const PORT = Number(process.env.PORT) || 3000; // the local test runner uses another port so it can run beside `npm run dev`
 
  // 2. Register a route
  app.use(express.json());
