@@ -18,7 +18,10 @@ cd frontend && npm run android     # native Android build + run (expo run:androi
 cd frontend && npm run lint        # ESLint
 ```
 
-`frontend/.env` must point `EXPO_PUBLIC_API_URL` at the running API. In dev, `localhost` is rewritten to Metro's host automatically, so the same value works on a physical device.
+`frontend/.env` must point `EXPO_PUBLIC_API_URL` at a running API:
+- **Default:** the hosted API, `https://lettuce-api-5y21.onrender.com`. The app works without `npm run dev` and from any network, but it only sees API code that's merged and deployed.
+- **For unmerged API changes:** use `http://localhost:3000` (kept commented out in the file) and run `npm run dev`. In dev, `localhost` is rewritten to Metro's host, so the same value works on a physical device.
+- Restart Metro with `npx expo start -c` after switching: `EXPO_PUBLIC_*` values are inlined into the bundle.
 
 ## Running on a physical iPhone
 

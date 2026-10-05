@@ -108,4 +108,4 @@ The week grid (month header with week arrows, a **Today** pill in the corner abo
 |---|---|
 | `EXPO_PUBLIC_SUPABASE_URL` | |
 | `EXPO_PUBLIC_SUPABASE_ANON_KEY` | |
-| `EXPO_PUBLIC_API_URL` | e.g. `http://localhost:3000`; required for repository-backed calls |
+| `EXPO_PUBLIC_API_URL` | required for repository-backed calls; the Render URL by default, `http://localhost:3000` for local API work (`brain/dev-workflow.md`) |
