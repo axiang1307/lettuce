@@ -62,6 +62,19 @@ Metro doesn't typecheck: run `npx tsc --noEmit` in `frontend/` and `api/` after 
 
 Run `eas build` from `frontend/`, where `eas.json` lives. EAS CLI detects the workspace root and uploads the whole repo; no monorepo-specific config is needed.
 
+The upload skips gitignored files, including `frontend/.env`. `EXPO_PUBLIC_*` values are inlined into the bundle at build time, so cloud builds need them as EAS environment variables. A release build needs an `https://` `EXPO_PUBLIC_API_URL`: iOS App Transport Security blocks plain `http`.
+
+## Deploy the API (Render)
+
+`render.yaml` (repo root) is a Render Blueprint for one web service, `lettuce-api`:
+- **Deploys `main`**, and only after GitHub CI passes for the commit (`autoDeployTrigger: checksPass`). `buildFilter` limits deploys to commits touching `api/`, `packages/api-types/`, the root `package.json` / lockfile or `render.yaml`, so frontend and `brain/` commits don't redeploy.
+- **Build:** `npm ci --include=dev -w api && npm run build -w api` installs only the API workspace (about 190 packages, no Expo / React Native). `NODE_ENV=production` makes npm skip devDependencies, and `tsc` is one, hence `--include=dev`. **Start:** `npm start -w api` (`node dist/index.js`, run from `api/`).
+- **Health check:** `GET /health`; a deploy goes live only once it answers `2xx`.
+- **Env:** `NODE_ENV=production` and `NODE_VERSION=22` (same as CI; Render's default for new services is Node 24) live in the file. `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` and `DATABASE_URL` are `sync: false`: Render asks for them only when the Blueprint is first created, and later changes are made in the dashboard. `PORT` is set by Render.
+- **Region / plan:** `virginia`, nearest the Supabase project in AWS `us-east-1`. The free plan spins the service down when idle, so the first request after a quiet spell is slow.
+- Logs (including stack traces the client no longer sees) are in the service's **Logs** tab.
+- Smoke test: `curl https://<service>.onrender.com/health`. The Postman collection can target it by setting `base_url` in the environment file.
+
 ## Shared types and migrations
 
 - `packages/api-types/database.ts` is generated: `npm run gen:types` (root) runs `supabase gen types typescript --linked`. Never hand-edit it.

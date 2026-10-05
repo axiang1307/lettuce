@@ -40,6 +40,20 @@ Settled decisions and why. When one changes, replace its entry.
 
 **Services throw typed errors; controllers map them to statuses (2026-10-03).** e.g. `ForbiddenError` → `403`. Keeps HTTP out of business logic, mirroring how Postgres codes (`23505` → `409`) are mapped in controllers.
 
+**Host the API on Render, defined as a Blueprint (2026-10-05).**
+- A long-running server fits Express plus a `pg` connection pool; serverless functions would open connections per invocation.
+- `render.yaml` keeps the hosting config in git, reviewed with the code; secrets stay out of it (`sync: false`).
+- Deploys `main` only after CI passes, so a broken merge never ships. Region `virginia` sits next to the database in `us-east-1`.
+- Free plan for now; it spins down when idle. Upgrade when real users notice cold starts.
+
+**`GET /health` is public and shallow (2026-10-05).** Registered before `authMiddleware` so the host's checker gets `200`, not `401`. It doesn't query the database: a failing health check makes Render restart the service, which can't fix a database outage, and database failures already surface as `500`s.
+
+**Database connections use TLS verified against Supabase's root CA (2026-10-05).**
+- Without it, the API's database password and data crossed the internet unencrypted (the URL had no `sslmode`, and pg defaults to no TLS).
+- Supabase signs its certificates with its own CA, so verification needs that CA. `api/certs/supabase-root-2021-ca.crt` is the copy in the official `supabase/cli` repo; its SHA-256 fingerprint (`80:70:25:AD…CA:FA`) matched the root the pooler sends. It expires 2031-04-26.
+- The rule lives in code (`src/lib/db.ts`: TLS for any non-local host) rather than as `sslmode` in each environment's URL, so a missing URL parameter can't silently fall back to plaintext. Local databases skip TLS because the local stack doesn't serve it.
+- `rejectUnauthorized: false` was rejected: it encrypts but accepts any certificate, which doesn't stop an impersonating server.
+
 ## Calendar
 
 **Manual calendars store busy blocks, not free slots (2026-10-04).**

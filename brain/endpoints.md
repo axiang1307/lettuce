@@ -4,17 +4,18 @@ Every route the API serves. Pipeline, layering, access rules and the error contr
 
 ## Basics
 
-- **Base URL:** `http://localhost:3000` in dev. The frontend reads it from `EXPO_PUBLIC_API_URL`.
-- **Auth:** every route requires `Authorization: Bearer <supabase access_token>`. `authMiddleware` is global, so there are no public routes (not even a health check). A missing, malformed or invalid token → `401`.
+- **Base URL:** `http://localhost:3000` in dev; the Render service's `onrender.com` URL when hosted. The frontend reads it from `EXPO_PUBLIC_API_URL`.
+- **Auth:** every route except `GET /health` requires `Authorization: Bearer <supabase access_token>`. `authMiddleware` is global and registered after `/health`. A missing, malformed or invalid token → `401`.
 - **Identity:** the caller is always `req.user.id`, taken from the verified token. No route takes a user id in the URL or body.
 - **Bodies:** JSON in and out. Errors are always `{ "error": string }`.
 - **Types:** request and response shapes are the shared types in `packages/api-types/index.ts`.
-- **Every route** can also return `401` (bad or missing token) and `500` (database error); the tables below list only the rest.
+- **Every route except `/health`** can also return `401` (bad or missing token) and `500` (database error); the tables below list only the rest.
 
 ## Summary
 
 | Method | Path | Returns | Frontend caller |
 |---|---|---|---|
+| `GET` | `/health` | `{ status: 'ok' }` (public, no database check) | none (Render's health check) |
 | `GET` | `/profiles/me` | `Profile` | `profilesRepo.getMe` |
 | `PATCH` | `/profiles/me` | `Profile` | `profilesRepo.patchMe` |
 | `GET` | `/events/me` | `Event[]` | `eventsRepo.getEvents` (home feed) |

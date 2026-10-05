@@ -6,7 +6,9 @@ Express 5 + TypeScript, run with `tsx` in dev. It replaces **part of** Supabase'
 
 `src/index.ts` runs once at startup and registers middleware and routes; `app.listen` then hands control to Express. Registration order is pipeline order, and a request only advances when a middleware calls `next()`:
 
-`express.json()` (parses the JSON body into `req.body`) → `authMiddleware` (global) → matching router.
+`express.json()` (parses the JSON body into `req.body`) → `GET /health` → `authMiddleware` (global) → matching router.
+
+`GET /health` is defined inline in `index.ts` (it's infrastructure, not a resource, so it skips the layers) and registered before `authMiddleware`, so it's the only public route. It answers `200 { status: 'ok' }` without touching the database: Render restarts a service whose health check fails, and a restart can't fix a database outage.
 
 `authMiddleware` (`src/middleware/auth.ts`):
 - reads `Authorization: Bearer <jwt>`
@@ -64,11 +66,18 @@ Shared clients are created once at import time: `src/lib/db.ts` (pg `Pool`) and 
 - **Shared access checks** live in the db layer of the resource they're about, e.g. `isMember(groupId, userId)` in `src/db/groups.ts`, used by the events service.
 - **Catching errors:** controllers wrap service calls in `try/catch`; there's no error-handling middleware.
 
-## Environment (`api/.env`)
+## Environment
 
 | Variable | Used for |
 |---|---|
 | `SUPABASE_URL` | auth verification client |
 | `SUPABASE_SERVICE_ROLE_KEY` | auth verification client |
-| `DATABASE_URL` | pg pool |
-| `PORT` | optional listen port, default `3000` (the local test runner sets it) |
+| `DATABASE_URL` | pg pool. Hosted: Supabase's session pooler URL (`aws-1-us-east-1.pooler.supabase.com:5432`, reachable over IPv4; the direct `db.<ref>.supabase.co` host is IPv6-only), **without** `sslmode` |
+| `PORT` | optional listen port, default `3000` (the local test runner and Render set it) |
+| `NODE_ENV` | `production` on Render: Express's default error handler then sends no stack traces |
+
+Locally these come from `api/.env` (loaded by `dotenv`); on Render they're set in the dashboard (`brain/dev-workflow.md`).
+
+## Database TLS
+
+`src/lib/db.ts` connects to any non-local database with TLS that verifies the server against Supabase's own root CA, `api/certs/supabase-root-2021-ca.crt` (Node's default trust store doesn't include it, so plain verification fails with `SELF_SIGNED_CERT_IN_CHAIN`). A `DATABASE_URL` on `localhost`, `127.0.0.1` or `[::1]` (the local stack, tests, CI) connects without TLS. `DATABASE_URL` must not contain `sslmode`: pg lets connection-string parameters override the `ssl` option in code.

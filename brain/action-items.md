@@ -1,5 +1,14 @@
 # Action items
 
+## Deploy
+
+- [ ] **Create the Render service.** Merge `render.yaml` to `main`, then in Render: New → Blueprint → the `axiang1307/lettuce` repo. Enter `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` and `DATABASE_URL` (the session pooler URL from `api/.env`, no `sslmode`). Check `curl https://<service>.onrender.com/health`.
+- [ ] **Point the app at the hosted API:** set `EXPO_PUBLIC_SUPABASE_URL`, `EXPO_PUBLIC_SUPABASE_ANON_KEY` and `EXPO_PUBLIC_API_URL` (the `https://` Render URL) as EAS environment variables, then build for TestFlight (needs an Apple Developer Program membership).
+- [ ] **Add `android.package` to `frontend/app.json`** before an Android build.
+- [ ] **Decide on a separate production Supabase project** before real users. Today local dev, `npm run test:api` (which leaves rows behind) and the hosted app all share one database.
+- [ ] **`api/scripts/test-local.sh` waits for any HTTP answer on `/`** (its comment says there's no health route). Switch it to `GET /health`.
+- [ ] Before a public App Store release: in-app account deletion and a privacy policy (Apple requires both for apps with sign-up), and no mock screens.
+
 ## API
 
 - [ ] **Backfill `profiles` for existing auth users.** The `on_auth_user_created` trigger works, but 12 older `auth.users` rows (as of 2026-10-03) have no profile, so they get `404` from `/profiles/me` and `500` (FK `23503`) when creating groups or events.
