@@ -4,7 +4,7 @@ Every route the API serves. Pipeline, layering, access rules and the error contr
 
 ## Basics
 
-- **Base URL:** `http://localhost:3000` in dev; the Render service's `onrender.com` URL when hosted. The frontend reads it from `EXPO_PUBLIC_API_URL`.
+- **Base URL:** `http://localhost:3000` in dev; `https://lettuce-api-5y21.onrender.com` when hosted (Render). The frontend reads it from `EXPO_PUBLIC_API_URL`.
 - **Auth:** every route except `GET /health` requires `Authorization: Bearer <supabase access_token>`. `authMiddleware` is global and registered after `/health`. A missing, malformed or invalid token → `401`.
 - **Identity:** the caller is always `req.user.id`, taken from the verified token. No route takes a user id in the URL or body.
 - **Bodies:** JSON in and out. Errors are always `{ "error": string }`.

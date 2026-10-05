@@ -66,14 +66,14 @@ The upload skips gitignored files, including `frontend/.env`. `EXPO_PUBLIC_*` va
 
 ## Deploy the API (Render)
 
-`render.yaml` (repo root) is a Render Blueprint for one web service, `lettuce-api`:
+`render.yaml` (repo root) is a Render Blueprint for one web service, `lettuce-api`, live at `https://lettuce-api-5y21.onrender.com`:
 - **Deploys `main`**, and only after GitHub CI passes for the commit (`autoDeployTrigger: checksPass`). `buildFilter` limits deploys to commits touching `api/`, `packages/api-types/`, the root `package.json` / lockfile or `render.yaml`, so frontend and `brain/` commits don't redeploy.
 - **Build:** `npm ci --include=dev -w api && npm run build -w api` installs only the API workspace (about 190 packages, no Expo / React Native). `NODE_ENV=production` makes npm skip devDependencies, and `tsc` is one, hence `--include=dev`. **Start:** `npm start -w api` (`node dist/index.js`, run from `api/`).
 - **Health check:** `GET /health`; a deploy goes live only once it answers `2xx`.
 - **Env:** `NODE_ENV=production` and `NODE_VERSION=22` (same as CI; Render's default for new services is Node 24) live in the file. `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` and `DATABASE_URL` are `sync: false`: Render asks for them only when the Blueprint is first created, and later changes are made in the dashboard. `PORT` is set by Render.
 - **Region / plan:** `virginia`, nearest the Supabase project in AWS `us-east-1`. The free plan spins the service down when idle, so the first request after a quiet spell is slow.
 - Logs (including stack traces the client no longer sees) are in the service's **Logs** tab.
-- Smoke test: `curl https://<service>.onrender.com/health`. The Postman collection can target it by setting `base_url` in the environment file.
+- Smoke test: `curl https://lettuce-api-5y21.onrender.com/health`. The Postman collection can target it with `npm run test:api -- --env-var base_url=https://lettuce-api-5y21.onrender.com`.
 
 ## Shared types and migrations
 
