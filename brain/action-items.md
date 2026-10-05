@@ -24,7 +24,6 @@
 
 ## Frontend
 
-- [ ] **Remove `console.log(session.access_token)` in `frontend/app/index.tsx`.** It leaks the token to device logs.
 - [ ] **Move onboarding's name step to `profilesRepo.patchMe`.** `app/onboarding/name.tsx` still upserts `profiles` through PostgREST with a client-supplied `id`.
 - [ ] **Real event detail.** Needs `GET /events/:id`, participants and polls; today it filters `GET /events/me` on the device and borrows mock panels and avatars (`toDetailEvent`). The profile tab's calendar and previous-event cards are still mock.
 - [ ] **Participant avatars on event cards**, once an event-participants endpoint exists.
