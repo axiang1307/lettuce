@@ -3,8 +3,6 @@ import { Colors } from '@/constants/theme';
 import { useAuth } from '@/lib/auth-context';
 import { Href, Redirect } from 'expo-router';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
-import {supabase } from '@/lib/supabase';
-import { useEffect } from 'react';
 
 /**
  * App entry: sends users into the onboarding → login → tabs flow.
@@ -16,12 +14,6 @@ const SKIP_ONBOARDING_AND_LOGIN = false;
 
 export default function Index() {
   const { session, loading } = useAuth();
-
-  useEffect(() => {
-    if (session) {
-      console.log(session.access_token);
-    }
-  }, [session]);
 
   if (loading) {
     return (

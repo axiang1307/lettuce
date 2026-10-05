@@ -1,0 +1,33 @@
+# Render Blueprint: hosts the API as a web service. The Expo app is built separately with EAS.
+services:
+  - type: web
+    name: lettuce-api
+    runtime: node
+    plan: free
+    region: virginia # nearest to the Supabase project (AWS us-east-1)
+    branch: main
+    # Installs only the API workspace, not Expo / React Native. NODE_ENV=production makes npm skip
+    # devDependencies, but the build needs typescript, hence --include=dev.
+    buildCommand: npm ci --include=dev -w api && npm run build -w api
+    startCommand: npm start -w api
+    healthCheckPath: /health
+    autoDeployTrigger: checksPass # deploy a main commit only after GitHub CI passes
+    buildFilter:
+      paths:
+        - api/**
+        - packages/api-types/**
+        - package.json
+        - package-lock.json
+        - render.yaml
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NODE_VERSION
+        value: "22" # same as CI
+      # Secrets: Render asks for them when the Blueprint is first created, so they never go in git.
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: DATABASE_URL
+        sync: false
