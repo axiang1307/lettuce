@@ -133,6 +133,11 @@ Settled decisions and why. When one changes, replace its entry.
 
 **CI tests against a throwaway local Supabase, never the hosted project (2026-10-04).** It builds the stack from `supabase/migrations` on the runner. No rows are left in production, CI needs no secrets (local demo keys, a per-run user and password), and the free tier's pausing can't fail builds.
 
+**`main` requires a PR with passing CI; admins may bypass (2026-10-05).**
+- Code reaches `main`, and through Render's `checksPass` production, only after `Typecheck` and `API tests` pass.
+- "Require branches to be up to date" is off: brain commits land on `main` constantly and would leave every open PR behind.
+- The Repository admin bypass exists for `/update-brain`'s direct pushes, since a new commit can't already have passing checks. Bypassing for a PR merge is possible but not used.
+
 ## Docs
 
 **Project knowledge lives in `brain/`; to-dos only in `brain/action-items.md`.** The root `CLAUDE.md` holds goals and norms and auto-loads only `architecture.md` and `action-items.md` to keep per-session input small; other files are read on demand. `AGENTS.md` points non-Claude agents to `CLAUDE.md`.
