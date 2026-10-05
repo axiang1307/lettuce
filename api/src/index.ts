@@ -13,6 +13,7 @@
 
  // 2. Register a route
  app.use(express.json());
+ app.get('/health', (_req, res) => res.status(200).json({ status: 'ok' }));
  app.use(authMiddleware);
  app.use('/profiles', profilesRouter);
  app.use('/events', eventsRouter);
