@@ -3,6 +3,7 @@
 ## Deploy
 
 - [ ] **Point the app at the hosted API:** set `EXPO_PUBLIC_SUPABASE_URL`, `EXPO_PUBLIC_SUPABASE_ANON_KEY` and `EXPO_PUBLIC_API_URL` (`https://lettuce-api-5y21.onrender.com`) as EAS environment variables, then build for TestFlight (needs an Apple Developer Program membership).
+- [ ] **Set up custom SMTP in Supabase Auth.** The built-in sender only delivers to the project's team members, at 2 emails an hour, so password reset (and any email code) doesn't reach other users. For the beta, Gmail with an app password; later, a sending service on an owned domain.
 - [ ] **Add `android.package` to `frontend/app.json`** before an Android build.
 - [ ] **Decide on a separate production Supabase project** before real users. Today local dev, `npm run test:api` (which leaves rows behind) and the hosted app all share one database.
 - [ ] **`api/scripts/test-local.sh` waits for any HTTP answer on `/`** (its comment says there's no health route). Switch it to `GET /health`.
@@ -10,7 +11,7 @@
 
 ## API
 
-- [ ] **Backfill `profiles` for existing auth users.** The `on_auth_user_created` trigger works, but 12 older `auth.users` rows (as of 2026-10-03) have no profile, so they get `404` from `/profiles/me` and `500` (FK `23503`) when creating groups or events.
+- [ ] **Clean up auth users without profiles.** 12 `auth.users` rows have no profile (they get `404` from `/profiles/me` and `500`, FK `23503`, when creating groups or events). As of 2026-10-05, 11 are phone-only users left by onboarding's phone step (see Frontend), which nobody can sign into with a password; delete them once that step changes. The 12th is an email user from 2026-04-30 that needs a backfilled profile.
 - [ ] **Revoke `EXECUTE` on `public.handle_new_user()` from `anon` and `authenticated`.** The security advisor flags it as callable via `/rest/v1/rpc`; the trigger doesn't need the grant. The baseline migration reproduces the grant, so revoke it in a new migration.
 - [ ] **`handle_new_user()` stores `full_name = ''`** when signup sends no name metadata (its fallback joins the `first_name` and `last_name` metadata and trims, giving `''`), but `PATCH /profiles/me` rejects `''`. Decide whether the trigger should store `NULL` instead.
 - [ ] **Postman gaps:** no requests yet for `409` username taken or another user's busy block (`404`), which both need a second user in `api/scripts/test-local.sh`; the profile `404` (needs a user without a profile); or a synced busy block's `403` (needs a non-manual calendar, which comes with Google sync).
@@ -23,6 +24,7 @@
 
 ## Frontend
 
+- [ ] **Onboarding's phone code is thrown away.** `onboarding/phone.tsx` and `verify.tsx` sign in a phone-only user, then `credentials.tsx` calls `signOut()` and `signUp({ email, password })`, which creates a separate user. The real account never gets the phone, and each new number leaves a phone-only user behind (as of 2026-10-05, 12 of 17 auth users are phone-only; none have both). Option under discussion: drop the phone step and verify the email with a code after `signUp` (Confirm email on, `{{ .Token }}` in the Confirm signup template, `verifyOtp({ email, token, type: 'signup' })`, like `verify_pass_reset.tsx`); needs custom SMTP (Deploy).
 - [ ] **Move onboarding's name step to `profilesRepo.patchMe`.** `app/onboarding/name.tsx` still upserts `profiles` through PostgREST with a client-supplied `id`.
 - [ ] **Real event detail.** Needs `GET /events/:id`, participants and polls; today it filters `GET /events/me` on the device and borrows mock panels and avatars (`toDetailEvent`). The profile tab's calendar and previous-event cards are still mock.
 - [ ] **Participant avatars on event cards**, once an event-participants endpoint exists.
