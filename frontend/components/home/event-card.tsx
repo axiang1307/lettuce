@@ -1,19 +1,19 @@
 import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Image } from 'expo-image';
-import type { ImageSourcePropType } from 'react-native';
+import type { ImageAsset } from '@/lib/image-source';
 
 import { ParticipantsProfiles } from './participants-profiles';
 
 export type EventCardProps = {
   variant: 'upcoming' | 'catchup';
-  imageUrl: string | ImageSourcePropType;
+  imageUrl: string | ImageAsset;
   title: string;
   details: string[];
   statusLabel?: string;
   ctaLabel: string;
   participants: {
-    avatars: Array<string | ImageSourcePropType>;
+    avatars: Array<string | ImageAsset>;
     moreCount?: number;
   };
   /** Opens event detail when user taps the card (image + main content). */

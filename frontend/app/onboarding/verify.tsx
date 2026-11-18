@@ -10,6 +10,7 @@ import {
   StyleSheet,
   Text,
   TextInput,
+  type TextInputInstance,
   View,
   Alert
 } from 'react-native';
@@ -31,7 +32,7 @@ export default function OnboardingVerify() {
   const phone = (params.phone ?? '').replace(/\D/g, '').slice(0, 10);
   const [code, setCode] = useState('');
   const [seconds, setSeconds] = useState(60);
-  const inputRef = useRef<TextInput>(null);
+  const inputRef = useRef<TextInputInstance>(null);
 
   useEffect(() => {
     if (seconds <= 0) return;
