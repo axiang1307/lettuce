@@ -6,7 +6,7 @@
  */
 
 import type { EventId } from '@/domain/entities';
-import type { ImageSourcePropType } from 'react-native';
+import type { ImageAsset } from '@/lib/image-source';
 
 const imgProfile2 = require('@/assets/images/figma-home/home-avatar-3.png');
 const imgProfile4 = require('@/assets/images/figma-home/home-avatar-5.png');
@@ -48,18 +48,18 @@ export type ActivityCard = {
   id: string;
   title: string;
   subtitle: string;
-  imageUrl: ImageSourcePropType;
+  imageUrl: ImageAsset;
 };
 
 export type HomeFeedEvent = {
   id: EventId;
   section: 'upcoming' | 'catchup';
-  imageUrl: ImageSourcePropType;
+  imageUrl: ImageAsset;
   title: string;
   details: string[];
   statusLabel?: string;
   ctaLabel: string;
-  participants: { avatars: ImageSourcePropType[]; moreCount?: number };
+  participants: { avatars: ImageAsset[]; moreCount?: number };
   /** PLACEHOLDER: extra copy on the event detail screen */
   groupName: string;
   description: string;

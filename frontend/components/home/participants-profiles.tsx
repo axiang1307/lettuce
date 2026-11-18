@@ -1,17 +1,17 @@
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { Image } from 'expo-image';
-import type { ImageSourcePropType } from 'react-native';
+import type { ImageAsset } from '@/lib/image-source';
 
 export type ParticipantsProfilesProps = {
-  avatars: Array<string | ImageSourcePropType>;
+  avatars: Array<string | ImageAsset>;
   moreCount?: number;
   size?: number;
   variant?: 'default' | 'extra' | 'one' | 'detailed';
   statusIcons?: Array<'none' | 'confirmed' | 'rejected'>;
 };
 
-function resolveSource(value: string | ImageSourcePropType): ImageSourcePropType {
+function resolveSource(value: string | ImageAsset): ImageAsset {
   if (typeof value === 'string') {
     return { uri: value };
   }

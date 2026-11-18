@@ -10,6 +10,7 @@ import {
   StyleSheet,
   Text,
   TextInput,
+  type TextInputInstance,
   View,
   Alert
 } from 'react-native';
@@ -25,7 +26,7 @@ export default function VerifyPassReset() {
   const email = params.email ?? '';
   const [code, setCode] = useState('');
   const [seconds, setSeconds] = useState(60);
-  const inputRef = useRef<TextInput>(null);
+  const inputRef = useRef<TextInputInstance>(null);
 
   useEffect(() => {
     if (seconds <= 0) return;

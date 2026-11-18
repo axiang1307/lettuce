@@ -1,6 +1,6 @@
 import { HOME_FEED_EVENTS, type HomeFeedEvent } from '@/data/home-feed';
 import type { Event, EventStatus } from '@/lib/repositories/events';
-import type { ImageSourcePropType } from 'react-native';
+import type { ImageAsset } from '@/lib/image-source';
 
 import { cardImageFor } from './card-images';
 
@@ -8,7 +8,7 @@ import { cardImageFor } from './card-images';
 export type FeedCard = {
   id: string;
   section: 'upcoming' | 'catchup';
-  imageUrl: ImageSourcePropType;
+  imageUrl: ImageAsset;
   title: string;
   details: string[];
   statusLabel: string;
